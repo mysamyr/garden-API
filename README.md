@@ -58,5 +58,5 @@
 - get cost for 1 tree GET
 - get expected income GET
 
-## Notes
-- Загальні дані про вид дерев зберігати в апі
+- get prices GET
+- update price PUT
