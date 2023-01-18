@@ -58,5 +58,6 @@
 - get cost for 1 tree GET
 - get expected income GET
 
-- get prices GET
-- update price PUT
+## Notes
+- Загальні дані про вид дерев зберігати в апі
+- Як обновляти readyForSale (add action | cron)?
