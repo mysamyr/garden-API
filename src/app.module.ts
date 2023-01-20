@@ -4,6 +4,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { PlantingModule } from "./planting/planting.module";
+import { GeneratorModule } from "./generator/generator.module";
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { PlantingModule } from "./planting/planting.module";
     }),
     MongooseModule.forRoot(process.env.DB_URL),
     PlantingModule,
+    GeneratorModule,
   ],
   controllers: [AppController],
   providers: [AppService],
