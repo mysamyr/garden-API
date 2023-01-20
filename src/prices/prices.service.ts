@@ -1,23 +1,26 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, BadRequestException } from "@nestjs/common";
 
 import { Model } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
 
-import { Price } from "../models/price.schema";
-import { IPrice } from "../interfaces/price.interface";
+import { Price, PriceDocument } from "../models/price.schema";
 import { UpdatePriceDto } from "./dto/update-price.dto";
+import {
+  NO_PRICE_FOUND,
+  NO_PRICE_ID_FOUND,
+} from "../common/constants/error-messages";
 
 @Injectable()
 export class PricesService {
   constructor(
     @InjectModel(Price.name)
-    private priceModel: Model<IPrice>,
+    private priceModel: Model<PriceDocument>,
   ) {}
 
   async updatePrice(
     priceId: string,
     updatePriceDto: UpdatePriceDto,
-  ): Promise<IPrice> {
+  ): Promise<PriceDocument> {
     const price = await this.priceModel.findByIdAndUpdate(
       priceId,
       updatePriceDto,
@@ -25,17 +28,17 @@ export class PricesService {
     );
 
     if (!price) {
-      throw new NotFoundException(`Price ${priceId} is not found`);
+      throw new BadRequestException(NO_PRICE_ID_FOUND);
     }
 
     return price;
   }
 
-  async getAllPrices(skip = 0, limit = 10): Promise<IPrice[]> {
+  async getAllPrices({ skip, limit }): Promise<PriceDocument[]> {
     const prices = await this.priceModel.find().skip(skip).limit(limit);
 
     if (!prices || prices.length === 0) {
-      throw new NotFoundException("There is no prices data");
+      throw new BadRequestException(NO_PRICE_FOUND);
     }
 
     return prices;
