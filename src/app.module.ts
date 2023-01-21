@@ -1,12 +1,20 @@
 import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { MongooseModule } from "@nestjs/mongoose";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
-import { MongooseModule } from "@nestjs/mongoose";
-
-const { DB_URL } = process.env;
+import { PlantingModule } from "./planting/planting.module";
+import { GeneratorModule } from "./generator/generator.module";
 
 @Module({
-  imports: [MongooseModule.forRoot(DB_URL)],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    MongooseModule.forRoot(process.env.DB_URL),
+    PlantingModule,
+    GeneratorModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
