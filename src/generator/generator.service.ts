@@ -3,6 +3,7 @@ import { InjectConnection, InjectModel } from "@nestjs/mongoose";
 import mongoose, { Model } from "mongoose";
 
 import { APPLE, CHERRY, AREA, ACTIONS } from "../common/enums";
+import { transaction } from "../common/transaction";
 import {
   Area,
   AreaDocument,
@@ -15,7 +16,6 @@ import {
   User,
   UserDocument,
 } from "../models";
-import { transaction } from "../common/transaction";
 
 @Injectable()
 export class GeneratorService {
