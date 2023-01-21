@@ -8,10 +8,10 @@ export class Tree {
   @Prop({ required: true })
   name: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true })
   sort: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, default: [] })
   fertilizers: { name: string; month: number }[];
 }
 

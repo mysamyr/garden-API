@@ -1,9 +1,16 @@
-import { IsNumber } from "class-validator";
+import { IsAlphanumeric, IsOptional } from "class-validator";
 
 export class QueryPaginationDto {
-  @IsNumber()
+  @IsOptional()
+  @IsAlphanumeric()
   readonly skip: number;
-  @IsNumber()
+  @IsOptional()
+  @IsAlphanumeric()
+  readonly limit: number;
+}
+
+export class CreatePaginationDto {
+  readonly skip: number;
   readonly limit: number;
 
   constructor(query) {
