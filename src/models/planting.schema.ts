@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document, ObjectId } from "mongoose";
+import { Document, Types } from "mongoose";
+import { User } from "./user.schema";
 
 export type PlantingDocument = Planting & Document;
 
@@ -24,7 +25,7 @@ export class Planting {
   date: string;
 
   @Prop({ required: true })
-  live: string;
+  live: number;
 
   @Prop({ required: true, default: false })
   ready: boolean;
@@ -32,11 +33,11 @@ export class Planting {
   @Prop({ required: true, default: false })
   sold: boolean;
 
-  @Prop({ required: true })
-  actions: { action: string; date: string }[];
+  @Prop({ required: true, default: [] })
+  actions: { action: string; name?: string; date: string }[];
 
-  @Prop({ required: true })
-  user: ObjectId;
+  @Prop({ type: Types.ObjectId, ref: User.name, required: true })
+  user: User;
 }
 
 export const PlantingSchema = SchemaFactory.createForClass(Planting);

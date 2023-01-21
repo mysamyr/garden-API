@@ -58,5 +58,7 @@
 - get cost for 1 tree GET
 - get expected income GET
 
-- get prices GET
-- update price PUT
+## Notes
+- Загальні дані про вид дерев зберігати в апі
+- readyForSale обновляється при додаванні action
+- місяці для fertilizers рахувати починаючи з 0 (0 - січень, 11 - грудень)
