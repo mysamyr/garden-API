@@ -12,6 +12,9 @@ export class User {
   email: string;
 
   @Prop({ required: true, unique: true })
+  password: string;
+
+  @Prop({ required: true, unique: true })
   phone: string;
 }
 
