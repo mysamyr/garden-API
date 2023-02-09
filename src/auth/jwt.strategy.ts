@@ -10,13 +10,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: "SECRET",
+      secretOrKey: process.env.SECRET,
     });
   }
 
   async validate(payload: any) {
     const { username } = payload;
-    const user = this.userService.find(username);
+    const user = await this.userService.find(username);
 
     if (!user) {
       return new UnauthorizedException();

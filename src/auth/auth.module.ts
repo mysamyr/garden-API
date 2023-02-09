@@ -15,7 +15,7 @@ import { User, UserSchema } from "../models";
     UserModule,
     PassportModule,
     JwtModule.register({
-      secret: "SECRET",
+      secret: process.env.SECRET,
       signOptions: { expiresIn: "1h" },
     }),
   ],
