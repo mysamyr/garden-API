@@ -6,6 +6,7 @@ import { AppService } from "./app.service";
 import { PlantingModule } from "./planting/planting.module";
 import { PricesModule } from "./prices/prices.module";
 import { GeneratorModule } from "./generator/generator.module";
+import { CalcModule } from "./calc/calc.module";
 
 @Module({
   imports: [
@@ -16,8 +17,9 @@ import { GeneratorModule } from "./generator/generator.module";
     PlantingModule,
     PricesModule,
     GeneratorModule,
+    CalcModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
