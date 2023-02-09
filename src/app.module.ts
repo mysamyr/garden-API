@@ -6,6 +6,8 @@ import { AppService } from "./app.service";
 import { PlantingModule } from "./planting/planting.module";
 import { PricesModule } from "./prices/prices.module";
 import { GeneratorModule } from "./generator/generator.module";
+import { UserModule } from "./users/user.module";
+import { AuthModule } from "./auth/auth.module";
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { GeneratorModule } from "./generator/generator.module";
     PlantingModule,
     PricesModule,
     GeneratorModule,
+    UserModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
