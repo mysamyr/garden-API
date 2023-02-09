@@ -8,6 +8,7 @@ import { GetCostByTreeParamDto, CostDto } from "./dto/get-cost-by-tree-param.dto
 import { Price, PriceDocument, Tree, TreeDocument, TreeSchema } from "src/models";
 import { TreeEntity } from "src/common/entities";
 import { TreeDto } from "./dto/tree.dto";
+import { ACTIONS } from "src/common/enums";
 
 @Injectable()
 export class CalcService {
@@ -28,8 +29,8 @@ export class CalcService {
     const treeData: TreeDto = await this.treeModel.findOne({ sort: params.sort });
     const { growingTime, pruningCount } = new TreeEntity(params.type);
     const growingInYears: number = parseFloat((growingTime / 12).toFixed(2));
-    const fertilizers: string[] = treeData.fertilizers.map(tree => tree.name);
-    const pricesToCalc = await this.priceModel.find({ name: ['cut', 'fertilize', params.sort, ...fertilizers] }).select("price name")
+    const fertilizers: string[] = treeData.fertilizers.map(fertilizer => fertilizer.name);
+    const pricesToCalc = await this.priceModel.find({ name: [ACTIONS.CUT, ACTIONS.FERTILIZE, params.sort, ...fertilizers] }).select("price name")
 
     const result = pricesToCalc.reduce((acc, item) => {
       if (item.name === 'cut') {
