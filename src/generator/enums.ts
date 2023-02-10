@@ -15,3 +15,5 @@ export const FERTILIZERS = [
   "Москаль_200",
   "Окупант_200",
 ];
+
+export const PASSWORD = "Balion4ykL1on4yk!";

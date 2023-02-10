@@ -7,6 +7,9 @@ import { PlantingModule } from "./planting/planting.module";
 import { PricesModule } from "./prices/prices.module";
 import { GeneratorModule } from "./generator/generator.module";
 import { SortModule } from "./sort/sort.module";
+import { CalcModule } from "./calc/calc.module";
+import { UserModule } from "./users/user.module";
+import { AuthModule } from "./auth/auth.module";
 
 @Module({
   imports: [
@@ -18,6 +21,9 @@ import { SortModule } from "./sort/sort.module";
     PricesModule,
     SortModule,
     GeneratorModule,
+    CalcModule,
+    UserModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

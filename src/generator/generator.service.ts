@@ -1,9 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { InjectConnection, InjectModel } from "@nestjs/mongoose";
 import mongoose, { Model } from "mongoose";
+import * as bcrypt from "bcrypt";
 
 import { APPLE, CHERRY, AREA, ACTIONS } from "../common/enums";
-import { FERTILIZERS, SORTS } from "./enums";
+import { FERTILIZERS, PASSWORD, SORTS } from "./enums";
 import { transaction } from "../common/transaction";
 import { TreeEntity } from "../common/entities";
 import {
@@ -45,11 +46,19 @@ export class GeneratorService {
       const { users, trees, prices, plantings, areaUpdate } =
         this.getTestData(params);
 
+      const hashedPassword = await bcrypt.hash(PASSWORD, 10);
+
       await this.userModel.bulkWrite(
         users.map((user) => ({
           updateOne: {
             filter: { email: user.email },
-            update: { name: user.name, email: user.email, phone: user.phone },
+            update: {
+              _id: new mongoose.Types.ObjectId(user.id),
+              name: user.name,
+              email: user.email,
+              phone: user.phone,
+              password: hashedPassword,
+            },
             upsert: true,
           },
         })),
@@ -125,23 +134,22 @@ export class GeneratorService {
     if (!count) return [];
     const userStore = [
       {
-        _id: new mongoose.Types.ObjectId(),
         name: "Johny Silverhand",
         email: "samurai@cp.ice",
         phone: "+123456789001",
       },
       {
-        _id: new mongoose.Types.ObjectId(),
         name: "Jackie Welles",
         email: "night_city_legend@cp.ice",
         phone: "+123456789002",
       },
     ];
     const allUsersWithId = [...data, ...userStore].map((user) => ({
-      _id: new mongoose.Types.ObjectId(),
+      id: new mongoose.Types.ObjectId().toString(),
       name: user.name,
       email: user.email,
       phone: user.phone,
+      password: PASSWORD,
     }));
     const result = [];
 
@@ -150,10 +158,11 @@ export class GeneratorService {
         result.push(allUsersWithId[i]);
       } else {
         const newUser = {
-          _id: new mongoose.Types.ObjectId(),
+          id: new mongoose.Types.ObjectId().toString(),
           name: this.generateName(),
           email: this.generateEmail(),
           phone: this.generatePhone(),
+          password: PASSWORD,
         };
         result.push(newUser);
       }
@@ -256,7 +265,7 @@ export class GeneratorService {
     const result = [];
 
     for (let i = 0; i < count; i++) {
-      const userId = users[i]?._id || users[users.length % i]._id;
+      const userId = users[i]?.id || users[users.length % i].id;
       if (data[i]) {
         result.push({ ...data[i], user: userId });
       } else {

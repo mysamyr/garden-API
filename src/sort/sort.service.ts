@@ -68,7 +68,7 @@ export class SortService {
       return acc;
     }, {});
     return sorts.reduce((acc, sort) => {
-      const price = pricesObject[sort.name];
+      const price = pricesObject[sort.sort];
       const fertilizers = sort.fertilizers.map((fertilizer) => ({
         name: fertilizer.name,
         month: fertilizer.month,

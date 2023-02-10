@@ -20,7 +20,7 @@ class AppleTree implements TreeInterface {
   constructor() {
     this.name = APPLE;
     this.area = 60;
-    this.growingTime = 365 * 3;
+    this.growingTime = 12 * 3;
     this.percentOfDeath = 0.15;
     this.pruningCount = 2;
   }
@@ -35,7 +35,7 @@ class CherryTree implements TreeInterface {
   constructor() {
     this.name = CHERRY;
     this.area = 40;
-    this.growingTime = 365 * 2;
+    this.growingTime = 12 * 2;
     this.percentOfDeath = 0.08;
     this.pruningCount = 2;
   }

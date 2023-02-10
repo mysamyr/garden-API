@@ -7,12 +7,15 @@ import {
   Param,
   Post,
   Query,
+  // UseGuards,
 } from "@nestjs/common";
+// import {AuthGuard} from "@nestjs/passport";
 
 import { SortService } from "./sort.service";
 import { CreatePaginationDto, QueryPaginationDto } from "../common/dto";
 import { AddSortDto, getSortsDto } from "./dto";
 
+// @UseGuards(AuthGuard("jwt"))
 @Controller("sort")
 export class SortController {
   constructor(private readonly sortService: SortService) {}

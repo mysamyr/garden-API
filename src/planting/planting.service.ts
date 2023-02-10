@@ -42,13 +42,15 @@ export class PlantingService {
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
-  async plant(addPlantingDto): Promise<any> {
-    const { name, sort, count, price, user } = addPlantingDto;
+  async plant(addPlantingDto, user): Promise<any> {
+    const { name, sort, count, price } = addPlantingDto;
     return transaction(this.connection, async (session) => {
       const tree = new TreeEntity(name);
 
       // todo move user checking to auth middleware
-      const isUserExists = await this.userModel.findById(user).session(session);
+      const isUserExists = await this.userModel
+        .findById(user._id)
+        .session(session);
       if (!isUserExists) throw new BadRequestException(NOT_EXISTING_USER);
 
       // area

@@ -7,12 +7,15 @@ import {
   Param,
   Query,
   HttpCode,
+  // UseGuards,
 } from "@nestjs/common";
+// import { AuthGuard } from "@nestjs/passport";
 
 import { PricesService } from "./prices.service";
 import { QueryPaginationDto } from "../common/dto";
 import { UpdatePriceDto } from "./dto";
 
+// @UseGuards(AuthGuard("jwt"))
 @Controller("price")
 export class PricesController {
   constructor(private readonly pricesService: PricesService) {}

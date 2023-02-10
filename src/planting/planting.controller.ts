@@ -7,8 +7,11 @@ import {
   Param,
   Post,
   Put,
+  Req,
   Query,
+  // UseGuards,
 } from "@nestjs/common";
+// import { AuthGuard } from "@nestjs/passport";
 
 import { PlantingService } from "./planting.service";
 import {
@@ -18,14 +21,16 @@ import {
 } from "../common/dto";
 import { AddActionDto, AddPlantingDto } from "./dto";
 
+// @UseGuards(AuthGuard("jwt"))
 @Controller("tree")
 export class PlantingController {
   constructor(private readonly plantingService: PlantingService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  plant(@Body() addPlantingDto: AddPlantingDto): Promise<any> {
-    return this.plantingService.plant(addPlantingDto);
+  plant(@Body() addPlantingDto: AddPlantingDto, @Req() req): Promise<any> {
+    const user = req.user;
+    return this.plantingService.plant(addPlantingDto, user);
   }
   @Put(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
