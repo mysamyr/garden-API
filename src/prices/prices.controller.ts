@@ -7,25 +7,26 @@ import {
   Param,
   Query,
   HttpCode,
-  // UseGuards,
+  UseGuards,
 } from "@nestjs/common";
-// import { AuthGuard } from "@nestjs/passport";
+import { AuthGuard } from "@nestjs/passport";
 
 import { PricesService } from "./prices.service";
-import { QueryPaginationDto } from "../common/dto";
+import { QueryPaginationDto, ObjectIdParamDto } from "../common/dto";
 import { UpdatePriceDto } from "./dto";
 
-// @UseGuards(AuthGuard("jwt"))
+@UseGuards(AuthGuard("jwt"))
 @Controller("price")
 export class PricesController {
   constructor(private readonly pricesService: PricesService) {}
 
   @Put(":id")
+  @HttpCode(HttpStatus.NO_CONTENT)
   async updatePrice(
-    @Param("id") id: string,
+    @Param() param: ObjectIdParamDto,
     @Body() updatePriceDto: UpdatePriceDto,
   ) {
-    return await this.pricesService.updatePrice(id, updatePriceDto);
+    return await this.pricesService.updatePrice(param.id, updatePriceDto);
   }
 
   @Get()

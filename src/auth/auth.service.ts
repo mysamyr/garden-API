@@ -7,7 +7,7 @@ import {
 import { InjectModel } from "@nestjs/mongoose";
 import { JwtService } from "@nestjs/jwt";
 
-import bcrypt from "bcrypt";
+import * as bcrypt from "bcrypt";
 import { Model } from "mongoose";
 
 import { UserService } from "../users/user.service";
@@ -16,6 +16,7 @@ import {
   EMAIL_IN_USE,
   WRONG_CREDENTIALS,
 } from "../common/constants/error-messages";
+import { GetUserDto } from "../users/dto";
 
 @Injectable()
 export class AuthService {
@@ -27,7 +28,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signUp(user): Promise<any> {
+  async signUp(user): Promise<GetUserDto> {
     const users = await this.userService.find(user.email);
 
     if (users) {
@@ -39,9 +40,8 @@ export class AuthService {
     const newUser = await (
       await this.userModel.create({ ...user, password: hash })
     ).toObject();
-    const { password, ...createdUser } = newUser;
 
-    return createdUser;
+    return new GetUserDto(newUser);
   }
 
   async signIn({ email, password }): Promise<{ accessToken: string }> {
@@ -56,7 +56,10 @@ export class AuthService {
       throw new UnauthorizedException(WRONG_CREDENTIALS);
     }
 
-    const accessToken = this.jwtService.sign({ username: user.email });
+    const accessToken = this.jwtService.sign(
+      { username: user.email },
+      { secret: process.env.SECRET, expiresIn: "1h" },
+    );
 
     return { accessToken };
   }

@@ -19,7 +19,7 @@ export class PricesService {
   async updatePrice(
     priceId: string,
     updatePriceDto: UpdatePriceDto,
-  ): Promise<PriceDocument> {
+  ): Promise<any> {
     const price = await this.priceModel.findByIdAndUpdate(
       priceId,
       updatePriceDto,
@@ -29,8 +29,6 @@ export class PricesService {
     if (!price) {
       throw new BadRequestException(NO_PRICE_ID_FOUND);
     }
-
-    return price;
   }
 
   async getAllPrices({ skip, limit }): Promise<PriceDocument[]> {

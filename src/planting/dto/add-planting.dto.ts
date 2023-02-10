@@ -26,11 +26,6 @@ export class AddPlantingDto {
   @IsNotEmpty()
   readonly cost: number;
   @IsString()
-  @IsAlphanumeric()
-  @Length(24, 24)
-  @IsNotEmpty()
-  readonly user: string;
-  @IsString()
   @Length(10)
   @IsNotEmpty()
   readonly date: string;

@@ -9,9 +9,9 @@ import {
   Put,
   Req,
   Query,
-  // UseGuards,
+  UseGuards,
 } from "@nestjs/common";
-// import { AuthGuard } from "@nestjs/passport";
+import { AuthGuard } from "@nestjs/passport";
 
 import { PlantingService } from "./planting.service";
 import {
@@ -19,9 +19,10 @@ import {
   QueryPaginationDto,
   ObjectIdParamDto,
 } from "../common/dto";
-import { AddActionDto, AddPlantingDto } from "./dto";
+import { GetUserDto } from "../users/dto";
+import { AddActionDto, AddPlantingDto, GetPlantingsDto } from "./dto";
 
-// @UseGuards(AuthGuard("jwt"))
+@UseGuards(AuthGuard("jwt"))
 @Controller("tree")
 export class PlantingController {
   constructor(private readonly plantingService: PlantingService) {}
@@ -29,8 +30,8 @@ export class PlantingController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   plant(@Body() addPlantingDto: AddPlantingDto, @Req() req): Promise<any> {
-    const user = req.user;
-    return this.plantingService.plant(addPlantingDto, user);
+    const user: GetUserDto = req.user;
+    return this.plantingService.plant({ ...addPlantingDto, user: user.id });
   }
   @Put(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -42,13 +43,17 @@ export class PlantingController {
   }
   @Get()
   @HttpCode(HttpStatus.OK)
-  getAllPlantings(@Query() query: QueryPaginationDto): Promise<any> {
+  getAllPlantings(
+    @Query() query: QueryPaginationDto,
+  ): Promise<GetPlantingsDto> {
     const paginationParams = new CreatePaginationDto(query);
     return this.plantingService.getAll(paginationParams);
   }
   @Get("/sold")
   @HttpCode(HttpStatus.OK)
-  getSoldPlantings(@Query() query: QueryPaginationDto): Promise<any> {
+  getSoldPlantings(
+    @Query() query: QueryPaginationDto,
+  ): Promise<GetPlantingsDto> {
     const paginationParams = new CreatePaginationDto(query);
     return this.plantingService.getSold(paginationParams);
   }

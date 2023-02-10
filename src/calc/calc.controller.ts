@@ -9,8 +9,11 @@ import {
 import { AuthGuard } from "@nestjs/passport";
 
 import { CalcService } from "./calc.service";
-import { GetByProfitParamDto } from "src/calc/dto/get-by-profit-param.dto";
-import { GetByAreaParamDto, GetCostByTreeParamDto } from "./dto";
+import {
+  GetByProfitParamDto,
+  GetByAreaParamDto,
+  GetCostByTreeParamDto,
+} from "./dto";
 
 @UseGuards(AuthGuard("jwt"))
 @Controller("calc")
