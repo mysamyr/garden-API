@@ -9,3 +9,6 @@ export const NOT_READY_FOR_SALE = "Planting don't ready for sale";
 export const TOO_BIG_AREA_PLANTED = "You plant too big area";
 export const TOO_MANY_DIED = "Too many trees marked as died";
 export const UNKNOWN_ACTION = "Unknown action";
+export const EMAIL_IN_USE = "Email in use";
+export const WRONG_CREDENTIALS =
+  "Please check email and password and try again";

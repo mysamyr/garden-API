@@ -1,8 +1,7 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
-import { PlantingService } from "./planting.service";
-import { PlantingController } from "./planting.controller";
+import { SortService } from "./sort.service";
 import {
   Area,
   AreaSchema,
@@ -15,6 +14,7 @@ import {
   User,
   UserSchema,
 } from "../models";
+import { SortController } from "./sort.controller";
 
 @Module({
   imports: [
@@ -26,7 +26,7 @@ import {
       { name: User.name, schema: UserSchema },
     ]),
   ],
-  providers: [PlantingService],
-  controllers: [PlantingController],
+  providers: [SortService],
+  controllers: [SortController],
 })
-export class PlantingModule {}
+export class SortModule {}

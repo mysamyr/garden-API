@@ -6,6 +6,10 @@ import { AppService } from "./app.service";
 import { PlantingModule } from "./planting/planting.module";
 import { PricesModule } from "./prices/prices.module";
 import { GeneratorModule } from "./generator/generator.module";
+import { SortModule } from "./sort/sort.module";
+import { CalcModule } from "./calc/calc.module";
+import { UserModule } from "./users/user.module";
+import { AuthModule } from "./auth/auth.module";
 
 @Module({
   imports: [
@@ -15,7 +19,11 @@ import { GeneratorModule } from "./generator/generator.module";
     MongooseModule.forRoot(process.env.DB_URL),
     PlantingModule,
     PricesModule,
+    SortModule,
     GeneratorModule,
+    CalcModule,
+    UserModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

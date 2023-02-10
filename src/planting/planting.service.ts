@@ -24,8 +24,8 @@ import {
   PlantingDocument,
   Price,
   PriceDocument,
-  Tree,
-  TreeDocument,
+  Sort,
+  SortDocument,
   User,
   UserDocument,
 } from "../models";
@@ -37,18 +37,20 @@ export class PlantingService {
     @InjectModel(Area.name) private areaModel: Model<AreaDocument>,
     @InjectModel(Planting.name) private plantingModel: Model<PlantingDocument>,
     @InjectModel(Price.name) private priceModel: Model<PriceDocument>,
-    @InjectModel(Tree.name) private treeModel: Model<TreeDocument>,
+    @InjectModel(Sort.name) private sortModel: Model<SortDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
-  async plant(addPlantingDto): Promise<any> {
-    const { name, sort, count, price, user } = addPlantingDto;
+  async plant(addPlantingDto, user): Promise<any> {
+    const { name, sort, count, price } = addPlantingDto;
     return transaction(this.connection, async (session) => {
       const tree = new TreeEntity(name);
 
       // todo move user checking to auth middleware
-      const isUserExists = await this.userModel.findById(user).session(session);
+      const isUserExists = await this.userModel
+        .findById(user._id)
+        .session(session);
       if (!isUserExists) throw new BadRequestException(NOT_EXISTING_USER);
 
       // area
@@ -60,7 +62,11 @@ export class PlantingService {
         throw new BadRequestException(TOO_BIG_AREA_PLANTED);
       }
       await this.areaModel
-        .updateOne({ name: AREA }, { plantedArea: totalPlantedArea })
+        .updateOne(
+          { name: AREA, plantedArea: { $lte: totalArea } },
+          { plantedArea: totalPlantedArea },
+          { session },
+        )
         .session(session);
 
       // price
@@ -179,7 +185,7 @@ export class PlantingService {
       .exec();
     if (!planting) throw new BadRequestException(NO_PLANTING_FOUND);
 
-    const { fertilizers } = await this.treeModel
+    const { fertilizers } = await this.sortModel
       .findOne({
         name: planting.name,
         sort: planting.sort,
