@@ -6,7 +6,7 @@ import {
   NO_PRICE_FOUND,
   NO_PRICE_ID_FOUND,
 } from "../common/constants/error-messages";
-import { UpdatePriceDto } from "./dto/update-price.dto";
+import { UpdatePriceDto } from "./dto";
 import { Price, PriceDocument } from "../models";
 
 @Injectable()

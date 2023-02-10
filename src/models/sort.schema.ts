@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
 
-export type TreeDocument = Tree & Document;
+export type SortDocument = Sort & Document;
 
 @Schema()
-export class Tree {
+export class Sort {
   @Prop({ required: true })
   name: string;
 
@@ -15,4 +15,4 @@ export class Tree {
   fertilizers: { name: string; month: number }[];
 }
 
-export const TreeSchema = SchemaFactory.createForClass(Tree);
+export const SortSchema = SchemaFactory.createForClass(Sort);

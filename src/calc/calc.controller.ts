@@ -3,18 +3,19 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Param,
-  Query
+  Query,
+  UseGuards,
 } from "@nestjs/common";
-import { GetByProfitParamDto } from "src/calc/dto/get-by-profit-param.dto";
+import { AuthGuard } from "@nestjs/passport";
 
 import { CalcService } from "./calc.service";
-import { GetByAreaParamDto } from "./dto/get-by-area-param.dto";
-import { GetCostByTreeParamDto } from "./dto/get-cost-by-tree-param.dto";
+import { GetByProfitParamDto } from "src/calc/dto/get-by-profit-param.dto";
+import { GetByAreaParamDto, GetCostByTreeParamDto } from "./dto";
 
+@UseGuards(AuthGuard("jwt"))
 @Controller("calc")
 export class CalcController {
-  constructor(private readonly calcService: CalcService) { }
+  constructor(private readonly calcService: CalcService) {}
 
   @Get("profit")
   @HttpCode(HttpStatus.OK)

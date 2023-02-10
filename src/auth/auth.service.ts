@@ -7,11 +7,11 @@ import {
 import { InjectModel } from "@nestjs/mongoose";
 import { JwtService } from "@nestjs/jwt";
 
-import * as bcrypt from "bcrypt";
+import bcrypt from "bcrypt";
 import { Model } from "mongoose";
 
 import { UserService } from "../users/user.service";
-import { User, UserDocument } from "../models/user.schema";
+import { User, UserDocument } from "../models";
 import {
   EMAIL_IN_USE,
   WRONG_CREDENTIALS,

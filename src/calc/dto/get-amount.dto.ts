@@ -4,5 +4,4 @@ export class GetAmountDto {
   constructor(amount) {
     this.amount = amount.amount;
   }
-};
-
+}
