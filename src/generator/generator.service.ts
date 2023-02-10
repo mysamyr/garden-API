@@ -3,7 +3,7 @@ import { InjectConnection, InjectModel } from "@nestjs/mongoose";
 import mongoose, { Model } from "mongoose";
 
 import { APPLE, CHERRY, AREA, ACTIONS } from "../common/enums";
-import { SORTS } from "./enums";
+import { FERTILIZERS, SORTS } from "./enums";
 import { transaction } from "../common/transaction";
 import { TreeEntity } from "../common/entities";
 import {
@@ -13,8 +13,8 @@ import {
   PlantingDocument,
   Price,
   PriceDocument,
-  Tree,
-  TreeDocument,
+  Sort,
+  SortDocument,
   User,
   UserDocument,
 } from "../models";
@@ -26,7 +26,7 @@ export class GeneratorService {
     @InjectModel(Area.name) private areaModel: Model<AreaDocument>,
     @InjectModel(Planting.name) private plantingModel: Model<PlantingDocument>,
     @InjectModel(Price.name) private priceModel: Model<PriceDocument>,
-    @InjectModel(Tree.name) private treeModel: Model<TreeDocument>,
+    @InjectModel(Sort.name) private sortModel: Model<SortDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
@@ -38,25 +38,43 @@ export class GeneratorService {
         // reset area and truncate other collections
         await this.plantingModel.deleteMany({}, { session });
         await this.priceModel.deleteMany({}, { session });
-        await this.treeModel.deleteMany({}, { session });
+        await this.sortModel.deleteMany({}, { session });
         await this.userModel.deleteMany({}, { session });
       }
-
-      // todo add _id to every entity, create upsert
-      // await Model.bulkWrite(docs.map(doc => ({
-      //   updateOne: {
-      //     filter: {id: doc.id},
-      //     update: doc,
-      //     upsert: true,
-      //   }
-      // })))
 
       const { users, trees, prices, plantings, areaUpdate } =
         this.getTestData(params);
 
-      await this.userModel.create(users, { session });
-      await this.treeModel.create(trees, { session });
-      await this.priceModel.create(prices, { session });
+      await this.userModel.bulkWrite(
+        users.map((user) => ({
+          updateOne: {
+            filter: { email: user.email },
+            update: { name: user.name, email: user.email, phone: user.phone },
+            upsert: true,
+          },
+        })),
+        { session },
+      );
+      await this.sortModel.bulkWrite(
+        trees.map((tree) => ({
+          updateOne: {
+            filter: { sort: tree.sort },
+            update: tree,
+            upsert: true,
+          },
+        })),
+        { session },
+      );
+      await this.priceModel.bulkWrite(
+        prices.map((price) => ({
+          updateOne: {
+            filter: { name: price.name },
+            update: price,
+            upsert: true,
+          },
+        })),
+        { session },
+      );
       await this.plantingModel.create(plantings, { session });
       await this.areaModel.updateOne(
         {
@@ -147,24 +165,24 @@ export class GeneratorService {
     const treeStore = [
       {
         name: APPLE,
-        sort: "golden",
+        sort: SORTS.APPLE,
         fertilizers: [
-          { name: "Скоророст 1000", month: 0 },
-          { name: "Скоророст 2000", month: 2 },
-          { name: "Скоророст 3000", month: 4 },
-          { name: "Скоророст 4000", month: 6 },
-          { name: "Скоророст 5000", month: 8 },
-          { name: "Скоророст 6000", month: 10 },
+          { name: FERTILIZERS[0], month: 0 },
+          { name: FERTILIZERS[1], month: 2 },
+          { name: FERTILIZERS[2], month: 4 },
+          { name: FERTILIZERS[3], month: 6 },
+          { name: FERTILIZERS[4], month: 8 },
+          { name: FERTILIZERS[5], month: 10 },
         ],
       },
       {
         name: CHERRY,
-        sort: "Мелітопольська десертна",
+        sort: SORTS.CHERRY,
         fertilizers: [
-          { name: "Орк 200", month: 2 },
-          { name: "Мобік 200", month: 5 },
-          { name: "Москаль 200", month: 8 },
-          { name: "Окупант 200", month: 11 },
+          { name: FERTILIZERS[6], month: 2 },
+          { name: FERTILIZERS[7], month: 5 },
+          { name: FERTILIZERS[8], month: 8 },
+          { name: FERTILIZERS[9], month: 11 },
         ],
       },
     ];
@@ -194,16 +212,16 @@ export class GeneratorService {
       [ACTIONS.FERTILIZE]: 100,
       [SORTS.APPLE]: 20,
       [SORTS.CHERRY]: 50,
-      Скоророст_1000: 100,
-      Скоророст_2000: 2000,
-      Скоророст_3000: 300,
-      Скоророст_4000: 400,
-      Скоророст_5000: 500,
-      Скоророст_6000: 600,
-      Орк_200: 0.01,
-      Мобік_200: 0.02,
-      Москаль_200: 0.03,
-      Окупант_200: 0.04,
+      [FERTILIZERS[0]]: 100,
+      [FERTILIZERS[1]]: 2000,
+      [FERTILIZERS[2]]: 300,
+      [FERTILIZERS[3]]: 400,
+      [FERTILIZERS[4]]: 500,
+      [FERTILIZERS[5]]: 600,
+      [FERTILIZERS[6]]: 0.01,
+      [FERTILIZERS[7]]: 0.02,
+      [FERTILIZERS[8]]: 0.03,
+      [FERTILIZERS[9]]: 0.04,
     };
     const result = [];
     result.push({

@@ -11,9 +11,9 @@ import {
 
 import { PricesService } from "./prices.service";
 import { QueryPaginationDto } from "../common/dto";
-import { UpdatePriceDto } from "./dto/update-price.dto";
+import { UpdatePriceDto } from "./dto";
 
-@Controller("prices")
+@Controller("price")
 export class PricesController {
   constructor(private readonly pricesService: PricesService) {}
 

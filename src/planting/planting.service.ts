@@ -24,8 +24,8 @@ import {
   PlantingDocument,
   Price,
   PriceDocument,
-  Tree,
-  TreeDocument,
+  Sort,
+  SortDocument,
   User,
   UserDocument,
 } from "../models";
@@ -37,7 +37,7 @@ export class PlantingService {
     @InjectModel(Area.name) private areaModel: Model<AreaDocument>,
     @InjectModel(Planting.name) private plantingModel: Model<PlantingDocument>,
     @InjectModel(Price.name) private priceModel: Model<PriceDocument>,
-    @InjectModel(Tree.name) private treeModel: Model<TreeDocument>,
+    @InjectModel(Sort.name) private sortModel: Model<SortDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
@@ -60,7 +60,11 @@ export class PlantingService {
         throw new BadRequestException(TOO_BIG_AREA_PLANTED);
       }
       await this.areaModel
-        .updateOne({ name: AREA }, { plantedArea: totalPlantedArea })
+        .updateOne(
+          { name: AREA, plantedArea: { $lte: totalArea } },
+          { plantedArea: totalPlantedArea },
+          { session },
+        )
         .session(session);
 
       // price
@@ -179,7 +183,7 @@ export class PlantingService {
       .exec();
     if (!planting) throw new BadRequestException(NO_PLANTING_FOUND);
 
-    const { fertilizers } = await this.treeModel
+    const { fertilizers } = await this.sortModel
       .findOne({
         name: planting.name,
         sort: planting.sort,
