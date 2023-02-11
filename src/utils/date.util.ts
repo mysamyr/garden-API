@@ -1,7 +1,7 @@
 export class DateUtil {
-  static getDaysForGrowing(plantingDate: string, growingTime: number): number {
+  static getDaysForGrowing(plantingDate: string, monthsToGrow: number): number {
     const date: Date = new Date(Date.parse(plantingDate));
-    date.setDate(date.getDate() + growingTime);
+    date.setMonth(date.getMonth() + monthsToGrow);
     return Math.ceil(
       (date.getTime() - new Date().getTime()) / (1000 * 3600 * 24),
     );

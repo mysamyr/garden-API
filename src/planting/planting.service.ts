@@ -5,7 +5,6 @@ import mongoose, { Model } from "mongoose";
 import {
   TOO_BIG_AREA_PLANTED,
   NO_PLANTING_FOUND,
-  NOT_EXISTING_USER,
   UNKNOWN_ACTION,
   ALREADY_SOLD,
   TOO_MANY_DIED,
@@ -16,7 +15,12 @@ import { ACTIONS, AREA } from "../common/enums";
 import { TreeEntity } from "../common/entities";
 import { transaction } from "../common/transaction";
 import { QueryPaginationDto } from "../common/dto";
-import { GetPlantingDto, GetPlantingsDto, CreateNewPlantingDto } from "./dto";
+import {
+  GetPlantingDto,
+  GetPlantingsDto,
+  CreateNewPlantingDto,
+  PlantingWithUserDto,
+} from "./dto";
 import {
   Area,
   AreaDocument,
@@ -42,58 +46,55 @@ export class PlantingService {
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
-  async plant(addPlantingDto): Promise<any> {
+  async plant(addPlantingDto: PlantingWithUserDto): Promise<any> {
     const { name, sort, count, price } = addPlantingDto;
     return transaction(this.connection, async (session) => {
       const tree = new TreeEntity(name);
 
-      // area
-      const [{ totalArea, plantedArea }] = await this.areaModel
-        .find()
-        .session(session);
-      const totalPlantedArea: number = tree.area * count + +plantedArea;
-      if (totalPlantedArea > totalArea) {
-        throw new BadRequestException(TOO_BIG_AREA_PLANTED);
-      }
-      await this.areaModel
-        .updateOne(
-          { name: AREA, plantedArea: { $lte: totalArea } },
-          { plantedArea: totalPlantedArea },
-          { session },
+      // area update
+
+      const addArea: number = tree.area * count;
+      const { totalArea, plantedArea } = await this.areaModel
+        .findOneAndUpdate(
+          { name: AREA },
+          { $inc: { plantedArea: addArea } },
+          { new: true },
         )
         .session(session);
 
-      // price
-      await this.priceModel.updateOne(
-        {
-          name: sort,
-        },
-        {
-          price,
-        },
-        { upsert: true, session },
-      );
+      if (plantedArea > totalArea) {
+        throw new BadRequestException(TOO_BIG_AREA_PLANTED);
+      }
 
-      await this.plantingModel.create(new CreateNewPlantingDto(addPlantingDto));
+      // price
+      await this.priceModel
+        .updateOne(
+          {
+            name: sort,
+          },
+          {
+            price,
+          },
+          { upsert: true },
+        )
+        .session(session);
+      const newPlanting = new CreateNewPlantingDto(addPlantingDto);
+
+      await this.plantingModel.create([newPlanting], { session });
     });
   }
 
   async addAction(id: string, addActionDto): Promise<any> {
-    const { action, date, name, amount } = addActionDto;
-
     return transaction(this.connection, async (session) => {
-      const planting = await this.plantingModel
+      const planting: PlantingDocument = await this.plantingModel
         .findById(id)
         .session(session)
         .exec();
       if (!planting) throw new BadRequestException(NO_PLANTING_FOUND);
 
-      const tree = new TreeEntity(planting.name);
-      const area = await this.areaModel
-        .findOne({ name: AREA })
-        .session(session);
+      const tree: TreeEntity = new TreeEntity(planting.name);
 
-      if (!DateUtil.IsValidDateForPlanting(planting.date, date))
+      if (!DateUtil.IsValidDateForPlanting(planting.date, addActionDto.date))
         throw new BadRequestException(INVALID_DATE_FOR_PLANTING);
       if (
         DateUtil.getDaysForGrowing(planting.date, tree.growingTime) <= 0 &&
@@ -102,18 +103,18 @@ export class PlantingService {
         planting.ready = true;
       }
 
-      switch (action) {
+      switch (addActionDto.action) {
         case ACTIONS.CUT:
           planting.actions.push({
             action: ACTIONS.CUT,
-            date: date,
+            date: addActionDto.date,
           });
           break;
         case ACTIONS.FERTILIZE:
           planting.actions.push({
             action: ACTIONS.FERTILIZE,
-            name: name,
-            date: date,
+            name: addActionDto.fertilizer,
+            date: addActionDto.date,
           });
           break;
         case ACTIONS.SELL:
@@ -122,24 +123,49 @@ export class PlantingService {
             throw new BadRequestException(NOT_READY_FOR_SALE);
           planting.sold = true;
           // recalculate area
-          area.plantedArea = this.getNewArea(
-            area.plantedArea,
-            planting.live,
-            tree.area,
-          );
-          area.save();
+          await this.areaModel
+            .findOneAndUpdate(
+              { name: AREA },
+              {
+                $inc: {
+                  plantedArea: -this.calculateArea(planting.live, tree.area),
+                },
+              },
+              { new: true },
+            )
+            .session(session);
+          // area.plantedArea = this.getNewArea(
+          //   area.plantedArea,
+          //   planting.live,
+          //   tree.area,
+          // );
+          // area.save();
           break;
         case ACTIONS.DIE:
-          const liveTrees = planting.live - amount;
+          const liveTrees: number = planting.live - addActionDto.died;
           if (liveTrees < 0) throw new BadRequestException(TOO_MANY_DIED);
           planting.live = liveTrees;
           // recalculate area
-          area.plantedArea = this.getNewArea(
-            area.plantedArea,
-            amount,
-            tree.area,
-          );
-          area.save();
+          await this.areaModel
+            .findOneAndUpdate(
+              { name: AREA },
+              {
+                $inc: {
+                  plantedArea: -this.calculateArea(
+                    addActionDto.died,
+                    tree.area,
+                  ),
+                },
+              },
+              { new: true },
+            )
+            .session(session);
+          // area.plantedArea = this.getNewArea(
+          //   area.plantedArea,
+          //   amount,
+          //   tree.area,
+          // );
+          // area.save();
           break;
         default:
           throw new BadRequestException(UNKNOWN_ACTION);
@@ -148,31 +174,23 @@ export class PlantingService {
     });
   }
 
-  async getAll(query: QueryPaginationDto): Promise<GetPlantingsDto> {
+  async getPlantings(
+    query: QueryPaginationDto,
+    isSold = false,
+  ): Promise<GetPlantingsDto> {
     const { skip, limit } = query;
 
     const plantings = await this.plantingModel
-      .find({ sold: false }, {}, { skip, limit })
+      .find({ sold: isSold }, {}, { skip, limit })
       .select("name sort live ready")
       .populate("user", "name", User.name);
 
-    const area = await this.areaModel.findOne({ name: AREA });
+    const area = !isSold && (await this.areaModel.findOne({ name: AREA }));
 
     return new GetPlantingsDto({ plantings, area });
   }
 
-  async getSold(query: QueryPaginationDto): Promise<GetPlantingsDto> {
-    const { skip, limit } = query;
-
-    const plantings = await this.plantingModel
-      .find({ sold: true }, {}, { skip, limit })
-      .select("name sort live ready")
-      .populate("user", "name", User.name);
-
-    return new GetPlantingsDto({ plantings });
-  }
-
-  async getById(id: string): Promise<GetPlantingDto> {
+  async getPlantingById(id: string): Promise<GetPlantingDto> {
     const planting = await this.plantingModel
       .findById(id)
       .populate("user", "name", User.name)
@@ -198,7 +216,7 @@ export class PlantingService {
     });
   }
 
-  private getNewArea(planted, count, area) {
-    return planted - area * count;
+  private calculateArea(count, area) {
+    return count * area;
   }
 }

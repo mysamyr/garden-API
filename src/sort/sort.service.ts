@@ -5,7 +5,7 @@ import mongoose, { Model } from "mongoose";
 import { transaction } from "../common/transaction";
 import { Price, PriceDocument, Sort, SortDocument } from "../models";
 import { QueryPaginationDto } from "../common/dto";
-import { CreateSort } from "./dto";
+import { AddSortDto, CreateSort } from "./dto";
 
 @Injectable()
 export class SortService {
@@ -15,7 +15,7 @@ export class SortService {
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
-  async addSort(addPlantingDto): Promise<any> {
+  async addSort(addPlantingDto: AddSortDto): Promise<any> {
     return transaction(this.connection, async (session) => {
       await this.sortModel.updateOne(
         {
@@ -41,18 +41,18 @@ export class SortService {
   async getAll(type: string, query: QueryPaginationDto): Promise<any> {
     const { skip, limit } = query;
 
-    const sorts = await this.sortModel.find(
+    const sorts: SortDocument[] = await this.sortModel.find(
       { name: type },
       {},
       { skip, limit },
     );
     const names = this.getNamesForPrices(sorts);
-    const prices = await this.priceModel.find({ name: names });
+    const prices: PriceDocument[] = await this.priceModel.find({ name: names });
 
     return this.attachPricesToSort(sorts, prices);
   }
 
-  private getNamesForPrices(sorts): string[] {
+  private getNamesForPrices(sorts: SortDocument[]): string[] {
     return sorts.reduce((acc, sort) => {
       acc.push(sort.sort);
       sort.fertilizers.forEach((fertilizer) => {
@@ -62,7 +62,10 @@ export class SortService {
     }, []);
   }
 
-  private attachPricesToSort(sorts, prices): object[] {
+  private attachPricesToSort(
+    sorts: SortDocument[],
+    prices: PriceDocument[],
+  ): AddSortDto[] {
     const pricesObject: object = prices.reduce((acc, price) => {
       acc[price.name] = price.price;
       return acc;
@@ -84,7 +87,7 @@ export class SortService {
     }, []);
   }
 
-  private getPricesFromRequest(sort) {
+  private getPricesFromRequest(sort: AddSortDto): CreateSort[] {
     // prevent duplications
     const fertilizerPrices: object = sort.fertilizers.reduce((acc, f) => {
       if (!acc[f.name]) {

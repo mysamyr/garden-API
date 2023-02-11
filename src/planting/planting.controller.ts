@@ -19,8 +19,14 @@ import {
   QueryPaginationDto,
   ObjectIdParamDto,
 } from "../common/dto";
-import { GetUserDto } from "../users/dto";
-import { AddActionDto, AddPlantingDto, GetPlantingsDto } from "./dto";
+import { GetUserDto } from "../auth/dto";
+import {
+  AddActionPipe,
+  AddActionType,
+  AddPlantingDto,
+  GetPlantingDto,
+  GetPlantingsDto,
+} from "./dto";
 
 @UseGuards(AuthGuard("jwt"))
 @Controller("tree")
@@ -37,7 +43,7 @@ export class PlantingController {
   @HttpCode(HttpStatus.NO_CONTENT)
   addAction(
     @Param() param: ObjectIdParamDto,
-    @Body() addActionDto: AddActionDto,
+    @Body(new AddActionPipe()) addActionDto: AddActionType,
   ): Promise<any> {
     return this.plantingService.addAction(param.id, addActionDto);
   }
@@ -46,20 +52,24 @@ export class PlantingController {
   getAllPlantings(
     @Query() query: QueryPaginationDto,
   ): Promise<GetPlantingsDto> {
-    const paginationParams = new CreatePaginationDto(query);
-    return this.plantingService.getAll(paginationParams);
+    const paginationParams: CreatePaginationDto = new CreatePaginationDto(
+      query,
+    );
+    return this.plantingService.getPlantings(paginationParams);
   }
   @Get("/sold")
   @HttpCode(HttpStatus.OK)
   getSoldPlantings(
     @Query() query: QueryPaginationDto,
   ): Promise<GetPlantingsDto> {
-    const paginationParams = new CreatePaginationDto(query);
-    return this.plantingService.getSold(paginationParams);
+    const paginationParams: CreatePaginationDto = new CreatePaginationDto(
+      query,
+    );
+    return this.plantingService.getPlantings(paginationParams, true);
   }
   @Get(":id")
   @HttpCode(HttpStatus.OK)
-  async getPlanting(@Param() param: ObjectIdParamDto): Promise<any> {
-    return this.plantingService.getById(param.id);
+  async getPlanting(@Param() param: ObjectIdParamDto): Promise<GetPlantingDto> {
+    return this.plantingService.getPlantingById(param.id);
   }
 }

@@ -1,2 +1,2 @@
 export { AddSortDto, CreateSort } from "./add-sort.dto";
-export { getSortsDto } from "./get-sorts.dto";
+export { GetSortsTypeDto } from "./get-sorts.dto";

@@ -7,15 +7,15 @@ import {
   Param,
   Post,
   Query,
-  // UseGuards,
+  UseGuards,
 } from "@nestjs/common";
-// import {AuthGuard} from "@nestjs/passport";
+import { AuthGuard } from "@nestjs/passport";
 
 import { SortService } from "./sort.service";
 import { CreatePaginationDto, QueryPaginationDto } from "../common/dto";
-import { AddSortDto, getSortsDto } from "./dto";
+import { AddSortDto, GetSortsTypeDto } from "./dto";
 
-// @UseGuards(AuthGuard("jwt"))
+@UseGuards(AuthGuard("jwt"))
 @Controller("sort")
 export class SortController {
   constructor(private readonly sortService: SortService) {}
@@ -28,9 +28,9 @@ export class SortController {
   @Get(":type")
   @HttpCode(HttpStatus.OK)
   getAllPlantings(
-    @Param() param: getSortsDto,
+    @Param() param: GetSortsTypeDto,
     @Query() query: QueryPaginationDto,
-  ): Promise<any> {
+  ): Promise<AddSortDto[]> {
     const type: string = param.type;
     const paginationParams = new CreatePaginationDto(query);
 

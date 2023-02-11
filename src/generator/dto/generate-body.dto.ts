@@ -35,7 +35,7 @@ class CategoryDto {
   readonly data: UserDto[];
 }
 
-export class GenerateDto {
+export class GenerateBodyDto {
   @IsBoolean()
   @IsOptional()
   readonly truncate: boolean;

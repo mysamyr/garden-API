@@ -4,7 +4,6 @@ import {
   MaxLength,
   IsNumber,
   Length,
-  IsAlphanumeric,
 } from "class-validator";
 
 export class AddPlantingDto {
@@ -51,4 +50,8 @@ export class CreateNewPlantingDto {
     this.live = param.count;
     this.user = param.user;
   }
+}
+
+export class PlantingWithUserDto extends AddPlantingDto {
+  readonly user: string;
 }

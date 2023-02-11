@@ -20,6 +20,14 @@ import {
   UserDocument,
 } from "../models";
 import { DateUtil } from "../utils/date.util";
+import {
+  FertilizerDto,
+  GenerateBodyDto,
+  PlantingDto,
+  PriceDto,
+  SortDto,
+  UserDto,
+} from "./dto";
 
 @Injectable()
 export class GeneratorService {
@@ -32,7 +40,7 @@ export class GeneratorService {
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
-  async generate(params): Promise<any> {
+  async generate(params: GenerateBodyDto): Promise<any> {
     const { truncate } = params;
     return transaction(this.connection, async (session) => {
       if (truncate) {
@@ -43,10 +51,13 @@ export class GeneratorService {
         await this.userModel.deleteMany({}, { session });
       }
 
-      const { users, trees, prices, plantings, areaUpdate } =
+      const { users, sorts, prices, plantings, areaUpdate } =
         this.getTestData(params);
 
-      const hashedPassword = await bcrypt.hash(PASSWORD, 10);
+      const hashedPassword: string = await bcrypt.hash(
+        PASSWORD,
+        +process.env.BCRYPT_SALT,
+      );
 
       await this.userModel.bulkWrite(
         users.map((user) => ({
@@ -65,10 +76,10 @@ export class GeneratorService {
         { session },
       );
       await this.sortModel.bulkWrite(
-        trees.map((tree) => ({
+        sorts.map((sort) => ({
           updateOne: {
-            filter: { sort: tree.sort },
-            update: tree,
+            filter: { sort: sort.sort },
+            update: sort,
             upsert: true,
           },
         })),
@@ -96,17 +107,17 @@ export class GeneratorService {
   }
 
   private getTestData({ totalArea, users, trees, plantings, prices }) {
-    const apple = new TreeEntity(APPLE);
-    const cherry = new TreeEntity(CHERRY);
+    const apple: TreeEntity = new TreeEntity(APPLE);
+    const cherry: TreeEntity = new TreeEntity(CHERRY);
 
-    const newUsers = this.createUsers(users);
-    const newTrees = this.createTrees(trees);
-    const newPrices = this.createPrices(prices, newTrees);
-    const newPlantings = this.createPlantings(
+    const newUsers: UserDto[] = this.createUsers(users);
+    const newSorts: SortDto[] = this.createSorts(trees);
+    const newPrices: PriceDto[] = this.createPrices(prices, newSorts);
+    const newPlantings: PlantingDto[] = this.createPlantings(
       plantings,
       newUsers,
       newPrices,
-      newTrees,
+      newSorts,
     );
     // calculate planted area
     const areaUpdate: { plantedArea: number; totalArea?: number } = {
@@ -123,14 +134,14 @@ export class GeneratorService {
 
     return {
       users: newUsers,
-      trees: newTrees,
+      sorts: newSorts,
       plantings: newPlantings,
       prices: newPrices,
       areaUpdate,
     };
   }
 
-  private createUsers({ count, data }) {
+  private createUsers({ count, data }): UserDto[] {
     if (!count) return [];
     const userStore = [
       {
@@ -169,7 +180,7 @@ export class GeneratorService {
     }
     return result;
   }
-  private createTrees({ count, data }) {
+  private createSorts({ count, data }): SortDto[] {
     if (!count) return [];
     const treeStore = [
       {
@@ -195,17 +206,21 @@ export class GeneratorService {
         ],
       },
     ];
-    const allTrees = [...data, ...treeStore];
+    const allSorts: SortDto[] = [...data, ...treeStore].map((sort) => ({
+      id: new mongoose.Types.ObjectId().toString(),
+      ...sort,
+    }));
     const result = [];
 
     for (let i = 0; i < count; i++) {
-      if (allTrees[i]) {
-        result.push(allTrees[i]);
+      if (allSorts[i]) {
+        result.push(allSorts[i]);
       } else {
-        // return opposite to the last tree type
-        const type = allTrees.at(-1) === APPLE ? CHERRY : APPLE;
-        const fertilizersCount = type === APPLE ? 6 : 4;
-        const newTree = {
+        // return opposite to the last sort type
+        const type: string = allSorts.at(-1).name === APPLE ? CHERRY : APPLE;
+        const fertilizersCount: number = type === APPLE ? 6 : 4;
+        const newTree: SortDto = {
+          id: new mongoose.Types.ObjectId().toString(),
           name: type,
           sort: this.generateName(),
           fertilizers: this.generateFertilizers(fertilizersCount),
@@ -215,7 +230,7 @@ export class GeneratorService {
     }
     return result;
   }
-  private createPrices(prices, trees) {
+  private createPrices(prices, sorts): PriceDto[] {
     const plantingStoreSet = {
       [ACTIONS.CUT]: 200,
       [ACTIONS.FERTILIZE]: 100,
@@ -241,14 +256,14 @@ export class GeneratorService {
       name: ACTIONS.FERTILIZE,
       price: prices[ACTIONS.FERTILIZE] || plantingStoreSet[ACTIONS.FERTILIZE],
     });
-    trees.forEach((tree) => {
-      const name = tree.sort;
+    sorts.forEach((sort) => {
+      const name = sort.sort;
       const price =
         prices[name] ||
         plantingStoreSet[name] ||
         this.generateRandomNumber(1, 20);
       result.push({ name, price });
-      tree.fertilizers.forEach((fertilizer) => {
+      sort.fertilizers.forEach((fertilizer) => {
         const name = fertilizer.name;
         const price =
           prices[name] ||
@@ -259,7 +274,12 @@ export class GeneratorService {
     });
     return result;
   }
-  private createPlantings({ count, data }, users, prices, trees) {
+  private createPlantings(
+    { count, data },
+    users,
+    prices,
+    trees,
+  ): PlantingDto[] {
     if (!count) return [];
     const date: string = DateUtil.getDate();
     const result = [];
@@ -312,7 +332,7 @@ export class GeneratorService {
     }
     return start + result;
   }
-  private generateFertilizers(length: number): object[] {
+  private generateFertilizers(length: number): FertilizerDto[] {
     const result = [];
     for (let i = 0; i < length; i++) {
       result.push({
@@ -323,15 +343,15 @@ export class GeneratorService {
     return result;
   }
   private generatePlanting(
-    trees, // : object[]
-    prices, // : object[]
+    sorts: SortDto[],
+    prices: PriceDto[],
     date: string,
     userId: string,
-  ): object {
-    const planted = this.generateRandomNumber(10, 50);
-    const index = this.generateRandomNumber(0, trees.length - 1);
-    const sort = trees[index];
-    const price = prices.find((price) => price.name === sort.sort);
+  ): PlantingDto {
+    const planted: number = this.generateRandomNumber(10, 50);
+    const index: number = this.generateRandomNumber(0, sorts.length - 1);
+    const sort: SortDto = sorts[index];
+    const price: PriceDto = prices.find((price) => price.name === sort.sort);
 
     return {
       name: sort.name,
