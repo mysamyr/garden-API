@@ -17,8 +17,8 @@ export class GetPlantingDto {
     this.planted = planting.planted;
     this.live = planting.live;
     this.plantingDate = planting.date;
-    this.readyForSale = planting.ready;
-    this.daysLeft = daysLeft;
+    this.readyForSale = daysLeft <= 0;
+    this.daysLeft = daysLeft > 0 ? daysLeft : 0;
     this.user = {
       id: planting.user._id,
       name: planting.user.name,
