@@ -9,6 +9,7 @@ export class GetPlantingDto {
   readonly daysLeft: number;
   readonly user: object;
   readonly fertilizers: [];
+  readonly actions: [];
 
   constructor({ planting, daysLeft, fertilizers }) {
     this.id = planting._id;
@@ -24,5 +25,6 @@ export class GetPlantingDto {
       name: planting.user.name,
     };
     this.fertilizers = fertilizers;
+    this.actions = planting.actions;
   }
 }

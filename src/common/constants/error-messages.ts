@@ -20,3 +20,9 @@ export const NO_PRICE_FOUND = "There is no prices data";
 export const EMAIL_IN_USE = "Email in use";
 export const WRONG_CREDENTIALS =
   "Please check email and password and try again";
+
+// sort
+export const INCORRECT_FERTILIZERS_COUNT =
+  "Incorrect number of fertilizers for this tree type";
+export const NO_SORT_FOUND = "No sorts found by this id";
+export const ALREADY_EXISTS = "Price already exists";

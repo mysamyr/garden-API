@@ -52,7 +52,6 @@ export class PlantingService {
       const tree = new TreeEntity(name);
 
       // area update
-
       const addArea: number = tree.area * count;
       const { totalArea, plantedArea } = await this.areaModel
         .findOneAndUpdate(
@@ -91,6 +90,7 @@ export class PlantingService {
         .session(session)
         .exec();
       if (!planting) throw new BadRequestException(NO_PLANTING_FOUND);
+      if (planting.sold) throw new BadRequestException(ALREADY_SOLD);
 
       const tree: TreeEntity = new TreeEntity(planting.name);
 
@@ -118,7 +118,6 @@ export class PlantingService {
           });
           break;
         case ACTIONS.SELL:
-          if (planting.sold) throw new BadRequestException(ALREADY_SOLD);
           if (!planting.ready)
             throw new BadRequestException(NOT_READY_FOR_SALE);
           planting.sold = true;
@@ -134,12 +133,6 @@ export class PlantingService {
               { new: true },
             )
             .session(session);
-          // area.plantedArea = this.getNewArea(
-          //   area.plantedArea,
-          //   planting.live,
-          //   tree.area,
-          // );
-          // area.save();
           break;
         case ACTIONS.DIE:
           const liveTrees: number = planting.live - addActionDto.died;
@@ -160,12 +153,6 @@ export class PlantingService {
               { new: true },
             )
             .session(session);
-          // area.plantedArea = this.getNewArea(
-          //   area.plantedArea,
-          //   amount,
-          //   tree.area,
-          // );
-          // area.save();
           break;
         default:
           throw new BadRequestException(UNKNOWN_ACTION);
@@ -197,12 +184,10 @@ export class PlantingService {
       .exec();
     if (!planting) throw new BadRequestException(NO_PLANTING_FOUND);
 
-    const { fertilizers } = await this.sortModel
-      .findOne({
-        name: planting.name,
-        sort: planting.sort,
-      })
-      .exec();
+    const { fertilizers } = await this.sortModel.findOne({
+      name: planting.name,
+      sort: planting.sort,
+    });
     const tree = new TreeEntity(planting.name);
     const daysLeft: number = DateUtil.getDaysForGrowing(
       planting.date,
