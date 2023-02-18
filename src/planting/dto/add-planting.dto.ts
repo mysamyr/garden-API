@@ -4,6 +4,7 @@ import {
   MaxLength,
   IsNumber,
   Length,
+  IsMongoId,
 } from "class-validator";
 
 export class AddPlantingDto {
@@ -11,8 +12,7 @@ export class AddPlantingDto {
   @MaxLength(30)
   @IsNotEmpty()
   readonly name: string;
-  @IsString()
-  @MaxLength(30)
+  @IsMongoId()
   @IsNotEmpty()
   readonly sort: string;
   @IsNumber()

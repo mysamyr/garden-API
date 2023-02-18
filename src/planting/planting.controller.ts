@@ -69,7 +69,7 @@ export class PlantingController {
   }
   @Get(":id")
   @HttpCode(HttpStatus.OK)
-  async getPlanting(@Param() param: ObjectIdParamDto): Promise<GetPlantingDto> {
+  getPlanting(@Param() param: ObjectIdParamDto): Promise<GetPlantingDto> {
     return this.plantingService.getPlantingById(param.id);
   }
 }

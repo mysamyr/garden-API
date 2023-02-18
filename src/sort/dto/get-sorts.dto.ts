@@ -5,9 +5,11 @@ import {
   IsNumber,
   IsString,
 } from "class-validator";
+import { QueryPaginationDto } from "../../common/dto";
 import { Fertilizer } from "./add-sort.dto";
+import { StringOrUndefined } from "../../common/types";
 
-export class GetSortsTypeDto {
+export class GetSortsTypeDto extends QueryPaginationDto {
   @IsString()
   @IsNotEmpty()
   readonly type: string;
@@ -28,4 +30,9 @@ export class GetSortsDto {
   readonly fertilizers: Fertilizer[];
   @IsNumber()
   readonly price: number;
+}
+
+export class GetSortFilterDto {
+  readonly name?: StringOrUndefined;
+  readonly active: boolean;
 }

@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectConnection, InjectModel } from "@nestjs/mongoose";
-import mongoose, { Model } from "mongoose";
+import { Model, Connection } from "mongoose";
 
 import {
   ALREADY_EXISTS,
@@ -12,19 +12,32 @@ import { transaction } from "../common/transaction";
 import { QueryPaginationDto } from "../common/dto";
 import {
   AddSortDto,
+  CheckSortDto,
   CreateSort,
   Fertilizer,
   GetSortsDto,
   PriceDto,
+  UpdateSortDto,
 } from "./dto";
-import { Price, PriceDocument, Sort, SortDocument } from "../models";
+import {
+  Planting,
+  PlantingDocument,
+  Price,
+  PriceDocument,
+  Sort,
+  SortDocument,
+} from "../models";
+import { GetSortFilterDto } from "./dto/get-sorts.dto";
+import { StringOrUndefined } from "../common/types";
+import { UpdateSortParamsDto } from "./dto/update-sort.dto";
 
 @Injectable()
 export class SortService {
   constructor(
+    @InjectModel(Planting.name) private plantingModel: Model<PlantingDocument>,
     @InjectModel(Price.name) private priceModel: Model<PriceDocument>,
     @InjectModel(Sort.name) private sortModel: Model<SortDocument>,
-    @InjectConnection() private readonly connection: mongoose.Connection,
+    @InjectConnection() private readonly connection: Connection,
   ) {}
 
   async addSort(addPlantingDto: AddSortDto): Promise<any> {
@@ -59,42 +72,68 @@ export class SortService {
     });
   }
 
-  async getAll(type: string, query: QueryPaginationDto): Promise<any> {
+  async getAll(
+    query: QueryPaginationDto,
+    type: StringOrUndefined,
+    isDisabled = false,
+  ): Promise<GetSortsDto[]> {
     const { skip, limit } = query;
 
-    const sorts: SortDocument[] = await this.sortModel.find(
-      { name: type },
-      {},
-      { skip, limit },
-    );
+    const filter: GetSortFilterDto = this.getFindSortFilter(type, isDisabled);
+    const sorts: SortDocument[] = await this.sortModel
+      .find(filter)
+      .skip(skip)
+      .limit(limit);
     const names = this.getNamesForPrices(sorts);
     const prices: PriceDocument[] = await this.priceModel.find({ name: names });
 
     return this.attachPricesToSort(sorts, prices);
   }
 
-  async updateSort(id: string, fertilizers: Fertilizer[]): Promise<any> {
+  async updateSort(id: string, updateSortDto: UpdateSortDto): Promise<any> {
+    const { fertilizers, name } = updateSortDto;
     return transaction(this.connection, async (session) => {
-      const sort = await this.sortModel.findById(id);
+      const sort = await this.sortModel.findById(id).session(session);
       if (!sort) throw new BadRequestException(NO_SORT_FOUND);
 
-      const tree: TreeEntity = new TreeEntity(sort.name);
-      if (fertilizers.length !== tree.fertilizersCount)
-        throw new BadRequestException(INCORRECT_FERTILIZERS_COUNT);
+      if (fertilizers) {
+        const tree: TreeEntity = new TreeEntity(sort.name);
+        if (fertilizers.length !== tree.fertilizersCount)
+          throw new BadRequestException(INCORRECT_FERTILIZERS_COUNT);
 
-      await this.sortModel.updateOne({ _id: id }, { fertilizers }, { session });
-      const prices: PriceDto[] = this.getPricesForFertilizers(fertilizers);
-      await this.priceModel.bulkWrite(
-        prices.map((price) => ({
-          updateOne: {
-            filter: { name: price.name },
-            update: price,
-            upsert: true,
-          },
-        })),
-        { session },
-      );
+        const prices: PriceDto[] = this.getPricesForFertilizers(fertilizers);
+        await this.priceModel.bulkWrite(
+          prices.map((price) => ({
+            updateOne: {
+              filter: { name: price.name },
+              update: price,
+              upsert: true,
+            },
+          })),
+          { session },
+        );
+      }
+      if (name) {
+        // update sort name for price too
+        await this.priceModel.updateOne(
+          { name: sort.sort },
+          { name },
+          { session },
+        );
+      }
+
+      const updateParams: UpdateSortParamsDto = new UpdateSortParamsDto(updateSortDto);
+      await this.sortModel.updateOne({ _id: id }, updateParams, { session });
     });
+  }
+
+  async checkUsageForSort(id: string): Promise<CheckSortDto> {
+    const plantings: number = await this.plantingModel
+      .find({ sort: id })
+      .count();
+
+    const used = !!plantings;
+    return new CheckSortDto(used);
   }
 
   private getNamesForPrices(sorts: SortDocument[]): string[] {
@@ -152,5 +191,16 @@ export class SortService {
       return acc;
     }, {});
     return Object.values(fertilizerPrices);
+  }
+
+  private getFindSortFilter(
+    type: StringOrUndefined,
+    isDisabled: boolean,
+  ): GetSortFilterDto {
+    const filter: { name?: string; active: boolean } = {
+      active: !isDisabled,
+    };
+    if (type) filter.name = type;
+    return filter;
   }
 }

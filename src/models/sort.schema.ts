@@ -11,6 +11,9 @@ export class Sort {
   @Prop({ required: true, unique: true })
   sort: string;
 
+  @Prop({ required: true, default: true })
+  active: boolean;
+
   @Prop({ required: true, default: [] })
   fertilizers: { name: string; month: number }[];
 }

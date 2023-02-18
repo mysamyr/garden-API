@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectConnection, InjectModel } from "@nestjs/mongoose";
-import mongoose, { Model } from "mongoose";
+import { Model, Connection } from "mongoose";
 
 import {
   GetByAreaParamDto,
@@ -19,7 +19,7 @@ export class CalcService {
   constructor(
     @InjectModel(Sort.name) private treeModel: Model<SortDocument>,
     @InjectModel(Price.name) private priceModel: Model<PriceDocument>,
-    @InjectConnection() private readonly connection: mongoose.Connection,
+    @InjectConnection() private readonly connection: Connection,
   ) {}
 
   async getByArea(param: GetByAreaParamDto): Promise<GetAmountDto> {
@@ -42,9 +42,10 @@ export class CalcService {
       .find({
         name: [ACTIONS.CUT, ACTIONS.FERTILIZE, params.sort, ...fertilizers],
       })
-      .select("price name");
+      .select("price name")
+      .exec();
 
-    const result = pricesToCalc.reduce((acc, item) => {
+    const result: number = pricesToCalc.reduce((acc, item) => {
       if (item.name === "cut") {
         return acc + item.price * pruningCount * growingInYears;
       } else if (item.name === "fertilize") {

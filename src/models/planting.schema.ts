@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Types } from "mongoose";
 import { User } from "./user.schema";
+import { Sort } from "./sort.schema";
 
 export type PlantingDocument = Planting & Document;
 
@@ -9,8 +10,8 @@ export class Planting {
   @Prop({ required: true })
   name: string;
 
-  @Prop({ required: true })
-  sort: string;
+  @Prop({ type: Types.ObjectId, ref: Sort.name, required: true })
+  sort: Sort;
 
   @Prop({ required: true })
   planted: number;
