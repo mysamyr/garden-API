@@ -33,6 +33,12 @@ export class GetSortsDto {
 }
 
 export class GetSortFilterDto {
-  readonly name?: StringOrUndefined;
-  readonly active: boolean;
+  name?: StringOrUndefined;
+  active: boolean;
+  constructor(params) {
+    if (params.type) {
+      this.name = params.type;
+    }
+    this.active = !params.isDisabled;
+  }
 }

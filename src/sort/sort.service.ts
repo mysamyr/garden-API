@@ -79,7 +79,7 @@ export class SortService {
   ): Promise<GetSortsDto[]> {
     const { skip, limit } = query;
 
-    const filter: GetSortFilterDto = this.getFindSortFilter(type, isDisabled);
+    const filter: GetSortFilterDto = new GetSortFilterDto({ type, isDisabled });
     const sorts: SortDocument[] = await this.sortModel
       .find(filter)
       .skip(skip)
@@ -122,7 +122,9 @@ export class SortService {
         );
       }
 
-      const updateParams: UpdateSortParamsDto = new UpdateSortParamsDto(updateSortDto);
+      const updateParams: UpdateSortParamsDto = new UpdateSortParamsDto(
+        updateSortDto,
+      );
       await this.sortModel.updateOne({ _id: id }, updateParams, { session });
     });
   }
@@ -191,16 +193,5 @@ export class SortService {
       return acc;
     }, {});
     return Object.values(fertilizerPrices);
-  }
-
-  private getFindSortFilter(
-    type: StringOrUndefined,
-    isDisabled: boolean,
-  ): GetSortFilterDto {
-    const filter: { name?: string; active: boolean } = {
-      active: !isDisabled,
-    };
-    if (type) filter.name = type;
-    return filter;
   }
 }
