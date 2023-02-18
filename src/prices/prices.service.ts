@@ -31,11 +31,10 @@ export class PricesService {
   }
 
   async getAllPrices({ skip, limit }): Promise<GetPricesDto[]> {
-    const prices: PriceDocument[] = await this.priceModel.find(
-      {},
-      {},
-      { skip, limit },
-    );
+    const prices: PriceDocument[] = await this.priceModel
+      .find({})
+      .skip(skip)
+      .limit(limit);
 
     if (!prices || !prices.length) {
       throw new BadRequestException(NO_PRICE_FOUND);

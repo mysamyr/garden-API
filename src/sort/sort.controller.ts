@@ -13,12 +13,15 @@ import {
 import { AuthGuard } from "@nestjs/passport";
 
 import { SortService } from "./sort.service";
+import { CreatePaginationDto, ObjectIdParamDto } from "../common/dto";
 import {
-  CreatePaginationDto,
-  ObjectIdParamDto,
-  QueryPaginationDto,
-} from "../common/dto";
-import { AddSortDto, GetSortsDto, GetSortsTypeDto, UpdateSortDto } from "./dto";
+  AddSortDto,
+  CheckSortDto,
+  GetSortsDto,
+  GetSortsTypeDto,
+  UpdateSortDto,
+} from "./dto";
+import { StringOrUndefined } from "../common/types";
 
 @UseGuards(AuthGuard("jwt"))
 @Controller("sort")
@@ -30,23 +33,39 @@ export class SortController {
   addSort(@Body() addSortDto: AddSortDto): Promise<any> {
     return this.sortService.addSort(addSortDto);
   }
-  @Get(":type")
+
+  @Get()
   @HttpCode(HttpStatus.OK)
-  getSorts(
-    @Param() param: GetSortsTypeDto,
-    @Query() query: QueryPaginationDto,
-  ): Promise<GetSortsDto[]> {
-    const type: string = param.type;
+  getSorts(@Query() query: GetSortsTypeDto): Promise<GetSortsDto[]> {
+    const type: StringOrUndefined = query.type;
     const paginationParams = new CreatePaginationDto(query);
 
-    return this.sortService.getAll(type, paginationParams);
+    return this.sortService.getAll(paginationParams, type);
   }
+
   @Put(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   updateSort(
     @Param() param: ObjectIdParamDto,
     @Body() updateSortDto: UpdateSortDto,
   ): Promise<AddSortDto[]> {
-    return this.sortService.updateSort(param.id, updateSortDto.fertilizers);
+    return this.sortService.updateSort(param.id, updateSortDto);
+  }
+
+  @Get("disabled")
+  @HttpCode(HttpStatus.OK)
+  getDisabledSorts(@Query() query: GetSortsTypeDto): Promise<GetSortsDto[]> {
+    const type: StringOrUndefined = query.type;
+    const paginationParams = new CreatePaginationDto(query);
+
+    return this.sortService.getAll(paginationParams, type, true);
+  }
+
+  @Get(":id/in-use")
+  @HttpCode(HttpStatus.OK)
+  checkIfSortInUse(@Param() param: ObjectIdParamDto): Promise<CheckSortDto> {
+    const { id } = param;
+
+    return this.sortService.checkUsageForSort(id);
   }
 }

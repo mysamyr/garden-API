@@ -41,17 +41,25 @@
 - виводити дані,
 - шукати дані,
 - редагувати дані,
-- \* а також записувати всі зміни зроблені через адмінку і мати механізм ролбеку таких змін.
+- а також записувати всі зміни зроблені через адмінку і мати механізм ролбеку таких змін,
+- наш профіт,
 
 ## Endpoints
 
-- get planted trees GET (+площа) /tree/
-- get planted tree GET  /tree/:id
-- get sold trees GET  /tree/sold
-- plant trees [] POST  /tree/
-- add action [] PUT  /tree/
-- get sorts GET
-- add sort POST
+- get planted trees GET /tree
+- get sold trees GET /tree/sold
+- get planted tree GET /tree/:id
+- plant trees POST /tree
+- add action PUT /tree
+
+- get sorts GET /sort
+- get disabled sorts GET /sort/disabled
+- add sort POST /sort
+- update sort PUT /sort/:id
+- check if sort in use GET /sort/:name/in-use
+
+- get prices GET /price
+- update price PUT /price/:id
 
 - get amount for profit GET
 - get amount by area GET
@@ -62,3 +70,19 @@
 - Загальні дані про вид дерев зберігати в апі
 - readyForSale обновляється при додаванні action
 - місяці для fertilizers рахувати починаючи з 0 (0 - січень, 11 - грудень)
+- Юзер приходить до нас і ми узгоджуємо прибуток від реалізації певного сорту (50%/50% вишні і яблуні).
+- Юзер готовий дати певну суму грошей і питає який прибуток ми йому можемо принести, реалізувавши певні сорти дерев.
+- (кількість дерев на всю суму
+  - -> віднімаємо потенційно мертві
+  - -> множимо на ціну реалізації
+  - -> віднімаємо суму вкладених грошей
+  - -> ділимо (70%/30%))
+
+## ToDo
+- add change user email/ password / phone_number (endpoints) + rollback
+- add update price (+cost) for planting + rollback
+- * add rollback possibility for price, sort (fertilizers)
+- add temporary disabling some sorts
+  - add new endpoints : getInactiveSorts, disable/unable sort, are u sure?
+  - add new column for sort "active"
+- add change sort name + update this sort for all plantings (+ rollback)

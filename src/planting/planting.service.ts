@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectConnection, InjectModel } from "@nestjs/mongoose";
-import mongoose, { Model } from "mongoose";
+import { Model, Connection } from "mongoose";
 
 import {
   TOO_BIG_AREA_PLANTED,
@@ -10,6 +10,7 @@ import {
   TOO_MANY_DIED,
   NOT_READY_FOR_SALE,
   INVALID_DATE_FOR_PLANTING,
+  NO_SORT_FOUND,
 } from "../common/constants/error-messages";
 import { ACTIONS, AREA } from "../common/enums";
 import { TreeEntity } from "../common/entities";
@@ -43,7 +44,7 @@ export class PlantingService {
     @InjectModel(Price.name) private priceModel: Model<PriceDocument>,
     @InjectModel(Sort.name) private sortModel: Model<SortDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-    @InjectConnection() private readonly connection: mongoose.Connection,
+    @InjectConnection() private readonly connection: Connection,
   ) {}
 
   async plant(addPlantingDto: PlantingWithUserDto): Promise<any> {
@@ -53,30 +54,23 @@ export class PlantingService {
 
       // area update
       const addArea: number = tree.area * count;
-      const { totalArea, plantedArea } = await this.areaModel
-        .findOneAndUpdate(
-          { name: AREA },
-          { $inc: { plantedArea: addArea } },
-          { new: true },
-        )
-        .session(session);
-
+      const { totalArea, plantedArea } = await this.areaModel.findOneAndUpdate(
+        { name: AREA },
+        { $inc: { plantedArea: addArea } },
+        { new: true, session },
+      );
       if (plantedArea > totalArea) {
         throw new BadRequestException(TOO_BIG_AREA_PLANTED);
       }
+      const sortData = await this.sortModel.findById(sort).session(session);
+      if (!sortData) throw new BadRequestException(NO_SORT_FOUND);
 
       // price
-      await this.priceModel
-        .updateOne(
-          {
-            name: sort,
-          },
-          {
-            price,
-          },
-          { upsert: true },
-        )
-        .session(session);
+      await this.priceModel.updateOne(
+        { name: sortData.name },
+        { price },
+        { session },
+      );
       const newPlanting = new CreateNewPlantingDto(addPlantingDto);
 
       await this.plantingModel.create([newPlanting], { session });
@@ -122,37 +116,30 @@ export class PlantingService {
             throw new BadRequestException(NOT_READY_FOR_SALE);
           planting.sold = true;
           // recalculate area
-          await this.areaModel
-            .findOneAndUpdate(
-              { name: AREA },
-              {
-                $inc: {
-                  plantedArea: -this.calculateArea(planting.live, tree.area),
-                },
+          await this.areaModel.findOneAndUpdate(
+            { name: AREA },
+            {
+              $inc: {
+                plantedArea: -this.calculateArea(planting.live, tree.area),
               },
-              { new: true },
-            )
-            .session(session);
+            },
+            { new: true, session },
+          );
           break;
         case ACTIONS.DIE:
           const liveTrees: number = planting.live - addActionDto.died;
           if (liveTrees < 0) throw new BadRequestException(TOO_MANY_DIED);
           planting.live = liveTrees;
           // recalculate area
-          await this.areaModel
-            .findOneAndUpdate(
-              { name: AREA },
-              {
-                $inc: {
-                  plantedArea: -this.calculateArea(
-                    addActionDto.died,
-                    tree.area,
-                  ),
-                },
+          await this.areaModel.findOneAndUpdate(
+            { name: AREA },
+            {
+              $inc: {
+                plantedArea: -this.calculateArea(addActionDto.died, tree.area),
               },
-              { new: true },
-            )
-            .session(session);
+            },
+            { new: true, session },
+          );
           break;
         default:
           throw new BadRequestException(UNKNOWN_ACTION);
@@ -168,8 +155,11 @@ export class PlantingService {
     const { skip, limit } = query;
 
     const plantings = await this.plantingModel
-      .find({ sold: isSold }, {}, { skip, limit })
-      .select("name sort live ready")
+      .find({ sold: isSold })
+      .skip(skip)
+      .limit(limit)
+      .select("name live ready")
+      .populate("sort", "sort", Sort.name)
       .populate("user", "name", User.name);
 
     const area = !isSold && (await this.areaModel.findOne({ name: AREA }));
@@ -180,14 +170,11 @@ export class PlantingService {
   async getPlantingById(id: string): Promise<GetPlantingDto> {
     const planting = await this.plantingModel
       .findById(id)
+      .populate("sort", "sort fertilizers", Sort.name)
       .populate("user", "name", User.name)
       .exec();
     if (!planting) throw new BadRequestException(NO_PLANTING_FOUND);
 
-    const { fertilizers } = await this.sortModel.findOne({
-      name: planting.name,
-      sort: planting.sort,
-    });
     const tree = new TreeEntity(planting.name);
     const daysLeft: number = DateUtil.getDaysForGrowing(
       planting.date,
@@ -197,7 +184,6 @@ export class PlantingService {
     return new GetPlantingDto({
       planting,
       daysLeft,
-      fertilizers,
     });
   }
 

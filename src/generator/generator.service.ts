@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectConnection, InjectModel } from "@nestjs/mongoose";
-import mongoose, { Model } from "mongoose";
+import { Model, Connection, Types } from "mongoose";
 import * as bcrypt from "bcrypt";
 
 import { APPLE, CHERRY, AREA, ACTIONS } from "../common/enums";
@@ -37,7 +37,7 @@ export class GeneratorService {
     @InjectModel(Price.name) private priceModel: Model<PriceDocument>,
     @InjectModel(Sort.name) private sortModel: Model<SortDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-    @InjectConnection() private readonly connection: mongoose.Connection,
+    @InjectConnection() private readonly connection: Connection,
   ) {}
 
   async generate(params: GenerateBodyDto): Promise<any> {
@@ -64,7 +64,7 @@ export class GeneratorService {
           updateOne: {
             filter: { email: user.email },
             update: {
-              _id: new mongoose.Types.ObjectId(user.id),
+              _id: new Types.ObjectId(user.id),
               name: user.name,
               email: user.email,
               phone: user.phone,
@@ -79,7 +79,12 @@ export class GeneratorService {
         sorts.map((sort) => ({
           updateOne: {
             filter: { sort: sort.sort },
-            update: sort,
+            update: {
+              _id: new Types.ObjectId(sort.id),
+              name: sort.name,
+              sort: sort.sort,
+              fertilizers: sort.fertilizers,
+            },
             upsert: true,
           },
         })),
@@ -156,7 +161,7 @@ export class GeneratorService {
       },
     ];
     const allUsersWithId = [...data, ...userStore].map((user) => ({
-      id: new mongoose.Types.ObjectId().toString(),
+      id: new Types.ObjectId().toString(),
       name: user.name,
       email: user.email,
       phone: user.phone,
@@ -169,7 +174,7 @@ export class GeneratorService {
         result.push(allUsersWithId[i]);
       } else {
         const newUser = {
-          id: new mongoose.Types.ObjectId().toString(),
+          id: new Types.ObjectId().toString(),
           name: this.generateName(),
           email: this.generateEmail(),
           phone: this.generatePhone(),
@@ -207,7 +212,7 @@ export class GeneratorService {
       },
     ];
     const allSorts: SortDto[] = [...data, ...treeStore].map((sort) => ({
-      id: new mongoose.Types.ObjectId().toString(),
+      id: new Types.ObjectId().toString(),
       ...sort,
     }));
     const result = [];
@@ -220,7 +225,7 @@ export class GeneratorService {
         const type: string = allSorts.at(-1).name === APPLE ? CHERRY : APPLE;
         const fertilizersCount: number = type === APPLE ? 6 : 4;
         const newTree: SortDto = {
-          id: new mongoose.Types.ObjectId().toString(),
+          id: new Types.ObjectId().toString(),
           name: type,
           sort: this.generateName(),
           fertilizers: this.generateFertilizers(fertilizersCount),
@@ -276,9 +281,9 @@ export class GeneratorService {
   }
   private createPlantings(
     { count, data },
-    users,
-    prices,
-    trees,
+    users: UserDto[],
+    prices: PriceDto[],
+    sorts: SortDto[],
   ): PlantingDto[] {
     if (!count) return [];
     const date: string = DateUtil.getDate();
@@ -287,9 +292,12 @@ export class GeneratorService {
     for (let i = 0; i < count; i++) {
       const userId = users[i]?.id || users[users.length % i].id;
       if (data[i]) {
-        result.push({ ...data[i], user: userId });
+        const sortId: string = sorts.find(
+          (sort) => sort.sort === data[i].sort,
+        ).id;
+        result.push({ ...data[i], sort: sortId, user: userId });
       } else {
-        result.push(this.generatePlanting(trees, prices, date, userId));
+        result.push(this.generatePlanting(sorts, prices, date, userId));
       }
     }
     return result;
@@ -355,7 +363,7 @@ export class GeneratorService {
 
     return {
       name: sort.name,
-      sort: sort.sort,
+      sort: sort.id,
       planted,
       price: price.price,
       cost: this.generateRandomFloat(500, 5000),

@@ -9,7 +9,7 @@ class Planting {
   constructor(planting) {
     this.id = planting._id;
     this.name = planting.name;
-    this.sort = planting.sort;
+    this.sort = planting.sort.sort;
     this.count = planting.live;
     this.readyForSale = planting.ready;
     this.user = {
