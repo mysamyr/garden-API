@@ -46,9 +46,9 @@ export class CalcService {
       .exec();
 
     const result: number = pricesToCalc.reduce((acc, item) => {
-      if (item.name === "cut") {
+      if (item.name === ACTIONS.CUT) {
         return acc + item.price * pruningCount * growingInYears;
-      } else if (item.name === "fertilize") {
+      } else if (item.name === ACTIONS.FERTILIZE) {
         return acc + fertilizers.length * growingInYears * item.price;
       } else if (item.name === params.sort) {
         return acc + item.price;
