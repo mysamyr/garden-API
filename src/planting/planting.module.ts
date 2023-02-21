@@ -15,6 +15,7 @@ import {
   User,
   UserSchema,
 } from "../models";
+import { CalcModule } from "../calc/calc.module";
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import {
       { name: Sort.name, schema: SortSchema },
       { name: User.name, schema: UserSchema },
     ]),
+    CalcModule,
   ],
   providers: [PlantingService],
   controllers: [PlantingController],

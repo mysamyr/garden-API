@@ -10,6 +10,7 @@ import {
   Req,
   Query,
   UseGuards,
+  Patch,
 } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 
@@ -26,6 +27,7 @@ import {
   AddPlantingDto,
   GetPlantingDto,
   GetPlantingsDto,
+  UpdatePlantingDto,
 } from "./dto";
 
 @UseGuards(AuthGuard("jwt"))
@@ -46,6 +48,14 @@ export class PlantingController {
     @Body(new AddActionPipe()) addActionDto: AddActionType,
   ): Promise<any> {
     return this.plantingService.addAction(param.id, addActionDto);
+  }
+  @Patch(":id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  updatePlanting(
+    @Param() param: ObjectIdParamDto,
+    @Body() updatePlantingDto: UpdatePlantingDto,
+  ): Promise<any> {
+    return this.plantingService.updatePlanting(param.id, updatePlantingDto);
   }
   @Get()
   @HttpCode(HttpStatus.OK)

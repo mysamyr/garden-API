@@ -11,6 +11,7 @@ export const NOT_READY_FOR_SALE = "Planting isn't ready for sale";
 export const TOO_BIG_AREA_PLANTED = "You plant too big area";
 export const TOO_MANY_DIED = "Too many trees marked as died";
 export const UNKNOWN_ACTION = "Unknown action";
+export const NOT_UPDATE_PRICE = "Price doesn't need to be updated";
 
 // price
 export const NO_PRICE_ID_FOUND = "There is no price with such id";

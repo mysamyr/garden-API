@@ -4,5 +4,6 @@ export {
   CreateNewPlantingDto,
   PlantingWithUserDto,
 } from "./add-planting.dto";
-export { GetPlantingDto } from "./get-planting-dto";
-export { GetPlantingsDto } from "./get-plantings-dto";
+export { GetPlantingDto } from "./get-planting.dto";
+export { GetPlantingsDto } from "./get-plantings.dto";
+export { UpdatePlantingDto } from "./update-planting.dto";

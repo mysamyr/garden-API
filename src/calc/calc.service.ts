@@ -6,7 +6,6 @@ import {
   GetByAreaParamDto,
   GetByProfitParamDto,
   GetAmountDto,
-  TreeDto,
   GetCostByTreeParamDto,
   CostDto,
 } from "./dto";
@@ -17,7 +16,7 @@ import { ACTIONS } from "src/common/enums";
 @Injectable()
 export class CalcService {
   constructor(
-    @InjectModel(Sort.name) private treeModel: Model<SortDocument>,
+    @InjectModel(Sort.name) private sortModel: Model<SortDocument>,
     @InjectModel(Price.name) private priceModel: Model<PriceDocument>,
     @InjectConnection() private readonly connection: Connection,
   ) {}
@@ -30,7 +29,7 @@ export class CalcService {
   }
 
   async getCostByTree(params: GetCostByTreeParamDto): Promise<CostDto> {
-    const treeData: TreeDto = await this.treeModel.findOne({
+    const treeData: SortDocument = await this.sortModel.findOne({
       sort: params.sort,
     });
     const { growingTime, pruningCount } = new TreeEntity(params.type);

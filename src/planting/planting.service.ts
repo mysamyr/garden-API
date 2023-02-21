@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
 import { InjectConnection, InjectModel } from "@nestjs/mongoose";
 import { Model, Connection } from "mongoose";
 
@@ -11,6 +11,7 @@ import {
   NOT_READY_FOR_SALE,
   INVALID_DATE_FOR_PLANTING,
   NO_SORT_FOUND,
+  NOT_UPDATE_PRICE,
 } from "../common/constants/error-messages";
 import { ACTIONS, AREA } from "../common/enums";
 import { TreeEntity } from "../common/entities";
@@ -21,6 +22,7 @@ import {
   GetPlantingsDto,
   CreateNewPlantingDto,
   PlantingWithUserDto,
+  UpdatePlantingDto,
 } from "./dto";
 import {
   Area,
@@ -35,10 +37,12 @@ import {
   UserDocument,
 } from "../models";
 import { DateUtil } from "../utils/date.util";
+import { CalcService } from "../calc/calc.service";
 
 @Injectable()
 export class PlantingService {
   constructor(
+    @Inject(CalcService) private calcService: CalcService,
     @InjectModel(Area.name) private areaModel: Model<AreaDocument>,
     @InjectModel(Planting.name) private plantingModel: Model<PlantingDocument>,
     @InjectModel(Price.name) private priceModel: Model<PriceDocument>,
@@ -145,6 +149,37 @@ export class PlantingService {
           throw new BadRequestException(UNKNOWN_ACTION);
       }
       return planting.save();
+    });
+  }
+
+  async updatePlanting(
+    id: string,
+    updatePlantingDto: UpdatePlantingDto,
+  ): Promise<any> {
+    // update price for planting, rewrite price
+    const { price } = updatePlantingDto;
+    return transaction(this.connection, async (session) => {
+      const planting: PlantingDocument = await this.plantingModel
+        .findById(id)
+        .populate("sort", "sort", Sort.name)
+        .session(session);
+      if (!planting) throw new BadRequestException(NO_PLANTING_FOUND);
+      if (planting.price === price)
+        throw new BadRequestException(NOT_UPDATE_PRICE);
+      await this.priceModel.updateOne(
+        { name: planting.sort.sort },
+        { price },
+        { session },
+      );
+      const { cost } = await this.calcService.getCostByTree({
+        type: planting.name,
+        sort: planting.sort.sort,
+      });
+      await this.plantingModel.updateOne(
+        { _id: planting.id },
+        { price, cost },
+        { session },
+      );
     });
   }
 

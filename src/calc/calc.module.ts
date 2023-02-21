@@ -19,6 +19,7 @@ import { CalcService } from "./calc.service";
       { name: Area.name, schema: AreaSchema },
     ]),
   ],
+  exports: [CalcService],
   providers: [CalcService],
   controllers: [CalcController],
 })
