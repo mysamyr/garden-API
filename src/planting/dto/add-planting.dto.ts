@@ -4,7 +4,7 @@ import {
   MaxLength,
   IsNumber,
   Length,
-  IsAlphanumeric,
+  IsMongoId,
 } from "class-validator";
 
 export class AddPlantingDto {
@@ -12,8 +12,7 @@ export class AddPlantingDto {
   @MaxLength(30)
   @IsNotEmpty()
   readonly name: string;
-  @IsString()
-  @MaxLength(30)
+  @IsMongoId()
   @IsNotEmpty()
   readonly sort: string;
   @IsNumber()
@@ -25,11 +24,6 @@ export class AddPlantingDto {
   @IsNumber()
   @IsNotEmpty()
   readonly cost: number;
-  @IsString()
-  @IsAlphanumeric()
-  @Length(24, 24)
-  @IsNotEmpty()
-  readonly user: string;
   @IsString()
   @Length(10)
   @IsNotEmpty()
@@ -56,4 +50,8 @@ export class CreateNewPlantingDto {
     this.live = param.count;
     this.user = param.user;
   }
+}
+
+export class PlantingWithUserDto extends AddPlantingDto {
+  readonly user: string;
 }

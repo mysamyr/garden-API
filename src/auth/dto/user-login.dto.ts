@@ -15,3 +15,7 @@ export class SignInUserDto {
   @IsStrongPassword()
   readonly password: string;
 }
+
+export class SignInTokenDto {
+  readonly accessToken: string;
+}

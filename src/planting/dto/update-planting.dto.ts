@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber } from "class-validator";
 
-export class UpdatePriceDto {
+export class UpdatePlantingDto {
   @IsNumber()
   @IsNotEmpty()
   readonly price: number;

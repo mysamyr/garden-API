@@ -8,6 +8,7 @@ interface TreeInterface {
   readonly growingTime: number;
   readonly percentOfDeath: number;
   readonly pruningCount: number;
+  readonly fertilizersCount: number;
 }
 
 class AppleTree implements TreeInterface {
@@ -16,6 +17,7 @@ class AppleTree implements TreeInterface {
   readonly growingTime: number;
   readonly percentOfDeath: number;
   readonly pruningCount: number;
+  readonly fertilizersCount: number;
 
   constructor() {
     this.name = APPLE;
@@ -23,6 +25,7 @@ class AppleTree implements TreeInterface {
     this.growingTime = 12 * 3;
     this.percentOfDeath = 0.15;
     this.pruningCount = 2;
+    this.fertilizersCount = 6;
   }
 }
 class CherryTree implements TreeInterface {
@@ -31,6 +34,7 @@ class CherryTree implements TreeInterface {
   readonly growingTime: number;
   readonly percentOfDeath: number;
   readonly pruningCount: number;
+  readonly fertilizersCount: number;
 
   constructor() {
     this.name = CHERRY;
@@ -38,6 +42,7 @@ class CherryTree implements TreeInterface {
     this.growingTime = 12 * 2;
     this.percentOfDeath = 0.08;
     this.pruningCount = 2;
+    this.fertilizersCount = 4;
   }
 }
 
@@ -47,6 +52,7 @@ export class TreeEntity implements TreeInterface {
   readonly growingTime: number;
   readonly percentOfDeath: number;
   readonly pruningCount: number;
+  readonly fertilizersCount: number;
 
   constructor(name: string) {
     switch (name) {

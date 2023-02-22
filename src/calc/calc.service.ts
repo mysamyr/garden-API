@@ -1,12 +1,11 @@
 import { Injectable } from "@nestjs/common";
 import { InjectConnection, InjectModel } from "@nestjs/mongoose";
-import mongoose, { Model } from "mongoose";
+import { Model, Connection } from "mongoose";
 
 import {
   GetByAreaParamDto,
   GetByProfitParamDto,
   GetAmountDto,
-  TreeDto,
   GetCostByTreeParamDto,
   CostDto,
 } from "./dto";
@@ -17,9 +16,9 @@ import { ACTIONS } from "src/common/enums";
 @Injectable()
 export class CalcService {
   constructor(
-    @InjectModel(Sort.name) private treeModel: Model<SortDocument>,
+    @InjectModel(Sort.name) private sortModel: Model<SortDocument>,
     @InjectModel(Price.name) private priceModel: Model<PriceDocument>,
-    @InjectConnection() private readonly connection: mongoose.Connection,
+    @InjectConnection() private readonly connection: Connection,
   ) {}
 
   async getByArea(param: GetByAreaParamDto): Promise<GetAmountDto> {
@@ -30,7 +29,7 @@ export class CalcService {
   }
 
   async getCostByTree(params: GetCostByTreeParamDto): Promise<CostDto> {
-    const treeData: TreeDto = await this.treeModel.findOne({
+    const treeData: SortDocument = await this.sortModel.findOne({
       sort: params.sort,
     });
     const { growingTime, pruningCount } = new TreeEntity(params.type);
@@ -42,12 +41,13 @@ export class CalcService {
       .find({
         name: [ACTIONS.CUT, ACTIONS.FERTILIZE, params.sort, ...fertilizers],
       })
-      .select("price name");
+      .select("price name")
+      .exec();
 
-    const result = pricesToCalc.reduce((acc, item) => {
-      if (item.name === "cut") {
+    const result: number = pricesToCalc.reduce((acc, item) => {
+      if (item.name === ACTIONS.CUT) {
         return acc + item.price * pruningCount * growingInYears;
-      } else if (item.name === "fertilize") {
+      } else if (item.name === ACTIONS.FERTILIZE) {
         return acc + fertilizers.length * growingInYears * item.price;
       } else if (item.name === params.sort) {
         return acc + item.price;

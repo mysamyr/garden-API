@@ -7,7 +7,7 @@ import {
   Min,
 } from "class-validator";
 
-class Fertilizer {
+export class Fertilizer {
   @IsString()
   readonly name: string;
   @IsNumber()

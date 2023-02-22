@@ -9,20 +9,22 @@ export class GetPlantingDto {
   readonly daysLeft: number;
   readonly user: object;
   readonly fertilizers: [];
+  readonly actions: [];
 
-  constructor({ planting, daysLeft, fertilizers }) {
+  constructor({ planting, daysLeft }) {
     this.id = planting._id;
     this.name = planting.name;
-    this.sort = planting.sort;
+    this.sort = planting.sort.sort;
     this.planted = planting.planted;
     this.live = planting.live;
     this.plantingDate = planting.date;
-    this.readyForSale = planting.ready;
-    this.daysLeft = daysLeft;
+    this.readyForSale = daysLeft <= 0;
+    this.daysLeft = daysLeft > 0 ? daysLeft : 0;
     this.user = {
       id: planting.user._id,
       name: planting.user.name,
     };
-    this.fertilizers = fertilizers;
+    this.fertilizers = planting.sort.fertilizers;
+    this.actions = planting.actions;
   }
 }
