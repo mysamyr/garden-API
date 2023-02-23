@@ -55,7 +55,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "echo \"Husky works\" && yarn format && git add ."
+      "pre-commit": "yarn format && git add ."
     }
   }
 }
