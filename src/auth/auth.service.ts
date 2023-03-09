@@ -48,10 +48,7 @@ export class AuthService {
       throw new UnauthorizedException(WRONG_CREDENTIALS);
     }
 
-    const accessToken: string = this.jwtService.sign(
-      { username: user.email },
-      { secret: process.env.JWT_SECRET, expiresIn: "1h" },
-    );
+    const accessToken: string = this.jwtService.sign({ username: user.email });
 
     return { accessToken };
   }
