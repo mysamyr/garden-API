@@ -19,8 +19,12 @@ export const NO_PRICE_FOUND = "There is no prices data";
 
 // auth
 export const EMAIL_IN_USE = "Email in use";
+export const PHONE_NUMBER_IN_USE = "Phone number in use";
 export const WRONG_CREDENTIALS =
   "Please check email and password and try again";
+export const EMAILS_MATCH = "Old and new email are same";
+export const PASSWORDS_MATCH = "Old and new passwords are same";
+export const PHONE_NUMBERS_MATCH = "Old and new phone numbers are same";
 
 // sort
 export const INCORRECT_FERTILIZERS_COUNT =
