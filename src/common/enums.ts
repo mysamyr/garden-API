@@ -9,3 +9,9 @@ export enum ACTIONS {
   SELL = "sell",
   DIE = "die",
 }
+
+export enum AUDIT_ENTITIES {
+  PLANTING = "pl",
+  SORT = "s",
+  PRICE = "pr",
+}

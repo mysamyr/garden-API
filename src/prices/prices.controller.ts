@@ -8,6 +8,7 @@ import {
   Query,
   HttpCode,
   UseGuards,
+  Req,
 } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 
@@ -18,6 +19,7 @@ import {
   CreatePaginationDto,
 } from "../common/dto";
 import { GetPricesDto, UpdatePriceDto } from "./dto";
+import { GetUserDto } from "../auth/dto";
 
 @UseGuards(AuthGuard("jwt"))
 @Controller("price")
@@ -29,8 +31,10 @@ export class PricesController {
   async updatePrice(
     @Param() param: ObjectIdParamDto,
     @Body() updatePriceDto: UpdatePriceDto,
+    @Req() req,
   ): Promise<any> {
-    return await this.pricesService.updatePrice(param.id, updatePriceDto);
+    const user: GetUserDto = req.user;
+    return await this.pricesService.updatePrice(param.id, updatePriceDto, user);
   }
 
   @Get()

@@ -31,3 +31,7 @@ export const INCORRECT_FERTILIZERS_COUNT =
   "Incorrect number of fertilizers for this tree type";
 export const NO_SORT_FOUND = "No sorts found by this id";
 export const ALREADY_EXISTS = "Price already exists";
+
+// audit
+export const NO_AUDIT_FOUND = "No audit found by this id";
+export const UNKNOWN_AUDIT_ENTITY = "Unknown audit";
